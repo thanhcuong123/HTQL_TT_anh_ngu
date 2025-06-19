@@ -1,0 +1,72 @@
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Nền mờ */
+    display: none;
+    /* Ban đầu ẩn */
+    justify-content: flex-end;
+    /* Căn popup sang phải */
+    align-items: flex-start;
+    z-index: 1000;
+}
+
+.sidebar-popup {
+    background-color: white;
+    width: 550px;
+    /* Chiều rộng của popup */
+    height: 100vh;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+    transform: translateX(100%);
+    /* Bắt đầu ngoài màn hình */
+    transition: transform 0.3s ease-out;
+    /* Hiệu ứng trượt */
+    padding: 20px;
+    overflow-y: auto;
+
+    /* Cuộn nếu nội dung quá dài */
+}
+
+.sidebar-popup.open {
+    transform: translateX(0);
+    /* Trượt vào */
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.popup-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.popup-close:hover {
+    color: #333;
+}
+
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.form-control {
+    margin-bottom: 15px;
+    border-radius: 0.25rem;
+}
+
+.btn-save-hocvien {
+    width: 100%;
+}
