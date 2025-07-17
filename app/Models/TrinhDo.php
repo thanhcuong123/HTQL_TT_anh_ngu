@@ -28,11 +28,14 @@ class TrinhDo extends Model
     {
         return $this->belongsTo(KyNang::class, 'kynang_id', 'id');
     }
-    public function donGias()
+    // public function dongia()
+    // {
+    //     return $this->hasMany(DonGia::class, 'trinhdo_id');
+    // }
+    public function dongia() // <-- Đã đổi tên mối quan hệ thành 'dongia'
     {
-        return $this->hasMany(DonGia::class, 'trinhdo_id');
+        return $this->hasOne(DonGia::class, 'trinhdo_id');
     }
-
     public function lopHocs()
     {
         return $this->hasMany(LopHoc::class, 'trinhdo_id');

@@ -1,18 +1,20 @@
-table {
+/* Đổi từ 'table' chung thành một class cụ thể, ví dụ '.data-table' */
+.data-table {
     width: 90%;
     border-collapse: collapse;
     /* margin-left: 55px; */
-    /* để viền sát nhau */
     margin-top: 5px;
 }
 
-th,
-td {
-    border: white;
+/* Đổi từ 'th, td' chung thành các selector cụ thể cho bảng dữ liệu của bạn */
+.data-table th,
+.data-table td {
+    border: 1px solid #dee2e6; /* Đặt lại border để nó hiển thị rõ ràng */
     padding: 8px;
     text-align: left;
 }
 
+/* Giữ nguyên các style khác nếu chúng không ảnh hưởng đến lịch */
 select {
     padding: 6px 12px;
     font-size: 14px;
@@ -20,22 +22,19 @@ select {
     border-radius: 4px;
     background-color: #fff;
     width: auto;
-    /* hoặc bạn set width cụ thể như 100px */
     min-width: 100px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .toolbar {
     display: flex;
-    /* Xếp ngang */
     align-items: center;
-    /* Căn dọc giữa */
     justify-content: space-between;
-    /* Đẩy 2 phần tử về 2 bên */
     padding: 0 15px;
     margin-bottom: 15px;
 }
 
+/* ... các style khác ... */
 .search-form {
     display: flex;
     align-items: center;

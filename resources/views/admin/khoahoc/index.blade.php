@@ -23,7 +23,7 @@
 
         <h3 class="card-title">Danh sách khóa học</h3>
         <div class="toolbar mb-3 d-flex justify-content-between align-items-center">
-            <button type="button" class="btn btn-primary btn-them-khoahoc">Thêm mới</button>
+            <button type="button" class="btn btn-primary btn-them-khoahoc">+ Thêm mới</button>
 
             <form class="search-form" action="" method="GET" style="position: relative;">
                 <input type="search" id="search" name="tu_khoa" placeholder="Tìm kiếm" autocomplete="off" class="form-control" />
@@ -51,6 +51,7 @@
                         <th>Tên khóa học</th>
                         <th>Thời lượng</th>
                         <th>Số buổi</th>
+                        <th>Hình ảnh</th>
                         <th class="col-action">Hành động</th>
                     </tr>
                 </thead>
@@ -62,6 +63,16 @@
                         <td>{{ $kh->ten }}</td>
                         <td>{{ $kh->thoiluong }}</td>
                         <td>{{ $kh->sobuoi }}</td>
+                        <td>
+                            @if($kh->hinhanh)
+                            {{-- Sử dụng asset() để tạo đường dẫn công khai đến ảnh --}}
+                            <img src="{{ asset('storage/' . $kh->hinhanh) }}" alt="Hình ảnh khóa học {{ $kh->ten }}" style="max-width: 100px; max-height: 100px; object-fit: cover;">
+                            {{-- Hoặc bạn có thể dùng Storage::url() nếu thích: --}}
+                            {{-- <img src="{{ Storage::url($kh->hinhanh) }}" alt="Hình ảnh khóa học {{ $kh->ten }}" style="max-width: 100px; max-height: 100px; object-fit: cover;"> --}}
+                            @else
+                            Không có ảnh
+                            @endif
+                        </td>
                         <td class="col-action">
                             <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a>
                             <a href="javascript:void(0);"
@@ -98,7 +109,7 @@
 
     <div class="popup-content">
         <h3>Thêm khóa học</h3>
-        <form action="{{ route('khoahoc.store') }}" method="POST">
+        <form action="{{ route('khoahoc.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <label for="ma">Mã khóa học</label>
             <input type="text" name="ma_hienthi" id="ma_hienthi" value="{{ $newMa }}" class="form-control" disabled>
@@ -114,7 +125,8 @@
 
             <label for="sobuoi">Số buổi</label>
             <input type="number" name="sobuoi" id="sobuoi" required placeholder="Ví dụ 20 buổi">
-
+            <label for="hinhanh">Hình ảnh</label>
+            <input type="file" name="hinhanh" id="hinhanh" accept="image/*" class="form-control">
             <div class="popup-buttons">
                 <button type="submit" class="btn btn-success">Lưu</button>
                 <button type="button" class="btn btn-secondary" onclick="dongPopup()">Hủy</button>
@@ -128,7 +140,7 @@
 
     <div class="popup-content">
         <h3>Sửa khóa học</h3>
-        <form id="form-sua-khoahoc" method="POST">
+        <form id="form-sua-khoahoc" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT') <!-- hoặc PATCH -->
             <label for="ma_sua">Mã khóa học</label>

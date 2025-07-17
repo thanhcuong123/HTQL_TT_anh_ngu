@@ -13,9 +13,9 @@
             <label for="ten_sua">Tên trình độ</label>
             <input type="text" name="ten_sua" id="ten_sua" required placeholder="Ví dụ Tiếng anh giao tiếp" class="form-control">
 
+
             <label for="kynang_id_sua">Kỹ năng liên quan</label>
-            <label for="kynang_id_sua">Kỹ năng liên quan</label>
-            <select name="kynang_id_sua" id="kynang_id_sua" class="form-control" required>
+            <select name="kynang_id_sua" id="kynang_id_sua" class="form-control">
                 <option value="">-- Chọn kỹ năng --</option>
                 @foreach ($dsKyNang as $kynang)
                 <option value="{{ $kynang->id }}"
@@ -26,7 +26,7 @@
             </select>
 
             <label for="namhoc_id_sua">Năm học</label>
-            <select name="namhoc_id_sua" id="namhoc_id_sua" class="form-control" required>
+            <select name="namhoc_id_sua" id="namhoc_id_sua" class="form-control">
                 <option value="">-- Chọn năm học --</option>
                 @foreach ($dsNamHoc as $namhoc)
                 <option value="{{ $namhoc->id }}"
@@ -37,7 +37,7 @@
             </select>
 
             <label for="hoc_phi_sua">Học phí</label>
-            <input type="text" name="hoc_phi_sua" id="hoc_phi_sua" required placeholder="Nhập học phí" class="form-control" oninput="formatCurrency(this)">
+            <input type="text" name="hoc_phi_sua" id="hoc_phi_sua" placeholder="Nhập học phí" class="form-control" oninput="formatCurrency(this)">
             <div id="hoc_phi_display_sua" style="margin-top: 5px; font-weight: bold;"></div>
 
             <label for="mota_sua">Mô tả trình độ</label>

@@ -34,11 +34,11 @@ class HocVien extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    // Trong model HocVien của bạn
     public function lopHocs()
     {
         return $this->belongsToMany(LopHoc::class, 'lophoc_hocvien', 'hocvien_id', 'lophoc_id')
-            ->withPivot('ngaydangky', 'trangthai')
-            ->withTimestamps(); // Nếu bảng pivot có created_at/updated_at
+            ->withPivot('ngaydangky', 'trangthai', 'created_at', 'updated_at'); // Đã sửa
     }
 
     public function diemDanhs()
@@ -46,7 +46,8 @@ class HocVien extends Model
         return $this->hasMany(DiemDanh::class, 'hocvien_id');
     }
 
-    public function phieuThus()
+    // app/Models/HocVien.php
+    public function phieuthu()
     {
         return $this->hasMany(PhieuThu::class, 'hocvien_id');
     }

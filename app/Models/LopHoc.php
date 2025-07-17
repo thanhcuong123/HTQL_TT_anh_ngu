@@ -18,13 +18,15 @@ class LopHoc extends Model
         'trinhdo_id',
         'giaovien_id',
         'tenlophoc',
-
+        'hinhanh',
         'malophoc',
         'ngaybatdau',
         'ngayketthuc',
         'soluonghocvientoida',
         'soluonghocvienhientai',
         'trangthai',
+        'mota',
+        'lichoc'
     ];
 
     public function khoaHoc()
@@ -32,7 +34,8 @@ class LopHoc extends Model
         return $this->belongsTo(KhoaHoc::class, 'khoahoc_id');
     }
 
-    public function trinhDo()
+    // Đảm bảo có cột 'trinhdo_id' trong bảng lophoc
+    public function trinhdo()
     {
         return $this->belongsTo(TrinhDo::class, 'trinhdo_id');
     }
@@ -42,11 +45,12 @@ class LopHoc extends Model
         return $this->belongsTo(GiaoVien::class, 'giaovien_id');
     }
 
-    public function hocViens()
+    // app/Models/LopHoc.php
+    public function hocviens()
     {
         return $this->belongsToMany(HocVien::class, 'lophoc_hocvien', 'lophoc_id', 'hocvien_id')
-            ->withPivot('ngaydangky', 'trangthai')
-            ->withTimestamps();
+            ->withPivot('ngaydangky') // << THÊM DÒNG NÀY NẾU CHƯA CÓ
+            ->withTimestamps(); // Nếu bạn có timestamps trên bảng pivot
     }
 
     public function diemDanhs()

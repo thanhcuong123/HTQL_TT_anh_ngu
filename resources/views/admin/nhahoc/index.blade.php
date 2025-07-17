@@ -28,7 +28,7 @@
 
         <h3 class="card-title">Danh sách Nhà học</h3>
         <div class="toolbar mb-3 d-flex justify-content-between align-items-center">
-            <button type="button" class="btn btn-primary btn-trinhdo">Thêm mới</button>
+            <button type="button" class="btn btn-primary btn-trinhdo">+ Thêm mới</button>
 
             <form class="search-form" action="" method="GET" style="position: relative;">
                 <input type="search" id="search" name="tu_khoa" placeholder="Tìm kiếm" autocomplete="off" class="form-control" />

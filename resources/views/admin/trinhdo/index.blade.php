@@ -25,7 +25,7 @@
 
         <h3 class="card-title">Danh sách trình độ</h3>
         <div class="toolbar mb-3 d-flex justify-content-between align-items-center">
-            <button type="button" class="btn btn-primary btn-trinhdo">Thêm mới</button>
+            <button type="button" class="btn btn-primary btn-trinhdo">+ Thêm mới</button>
 
             <form class="search-form" action="" method="GET" style="position: relative;">
                 <input type="search" id="search" name="tu_khoa" placeholder="Tìm kiếm" autocomplete="off" class="form-control" />
@@ -65,16 +65,25 @@
                         <td>{{ $td->ten }}</td>
 
                         <td>{{ $td->kynang->ten ?? 'chưa có'}}</td>
-                        <td>{{ isset($td->donGias->first()->hocphi) ? number_format($td->donGias->first()->hocphi, 0, ',', '.') . ' VNĐ' : 'Chưa có' }}</td>
-                        <td>{{ $td->donGias->first()->namhoc->nam ?? 'Chưa có' }}</td> <!-- Lấy năm học từ đơn giá -->
+                        <td>
+                            @if ($td->dongia)
+                            {{ number_format($td->dongia->hocphi, 0, ',', '.') }} VNĐ
+                            @else
+                            Chưa có
+                            @endif
+                        </td>
+                        <td>{{ $td->dongia?->namhoc?->nam ?? 'Chưa có' }}</td>
                         <td>{!!$td->mota !!}</td>
 
                         <td class="col-action">
-                            <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a>
+                            <!-- <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a> -->
                             <a href="javascript:void(0);"
                                 class="btn btn-sm btn-warning btn-sua-trinhdo"
                                 data-id="{{ $td->ma }}"
                                 data-ten="{{ $td->ten }}"
+                                data-kynang="{{ $td->kynang?->ten }}"
+                                data-hocphi="{{ $td->dongia?->hocphi }}"
+                                data-namhoc="{{ $td->dongia?->namhoc?->nam  }}"
                                 data-mota="{!!   htmlspecialchars($td->mota) !!}">
                                 Sửa
                             </a>
@@ -224,6 +233,7 @@
             var ma = $(this).data("id");
             var ten = $(this).data("ten");
             var mota = $(this).data("mota");
+
 
 
             // Điền dữ liệu vào form sửa

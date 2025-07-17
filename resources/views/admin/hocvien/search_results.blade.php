@@ -12,16 +12,21 @@
     <td>{{ $kh->ngaydangki }}</td>
     <td>{{ $kh->trangthai }}</td>
     <td class="col-action">
-        <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a>
-        <!-- <a href="javascript:void(0);"
-                                class="btn btn-sm btn-warning btn-sua-khoahoc"
-                                data-id="{{ $kh->ma }}"
-                                data-ten="{{ $kh->ten }}"
-                                data-mota="{!!   htmlspecialchars($kh->mota) !!}"
-                                data-thoiluong="{{ $kh->thoiluong }}"
-                                data-sobuoi="{{ $kh->sobuoi }}">
-                                Sửa
-                            </a> -->
+        <!-- <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a> -->
+        <a href="javascript:void(0);"
+            class="btn btn-sm btn-warning btn-sua-hocvien"
+            data-id="{{ $kh->id }}"
+            data-ma="{{ $kh->mahocvien }}"
+            data-ten="{{ $kh->ten }}"
+            data-email="{{ $kh->user->email ?? '' }}"
+            data-sdt="{{ $kh->sdt }}"
+            data-diachi="{{ $kh->diachi }}"
+            data-ngaysinh="{{ $kh->ngaysinh }}"
+            data-gioitinh="{{ $kh->gioitinh }}"
+            data-ngaydangki="{{ $kh->ngaydangki }}"
+            data-trangthai="{{ $kh->trangthai }}">
+            Sửa
+        </a>
 
         <form action="" method="POST" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa?')">
             @csrf

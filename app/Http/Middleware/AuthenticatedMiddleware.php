@@ -24,7 +24,8 @@ class AuthenticatedMiddleware
         }
         $user = Auth::user();
         if (!in_array($user->role, $roles)) {
-            return redirect()->route('login')->with('error', 'Bạn không có quyền truy cập trang này');
+            // return redirect()->route('login')->with('error', 'Bạn không có quyền truy cập trang này');
+            return response()->view('error.unauthorized', [], 403);
         }
         return $next($request);
     }

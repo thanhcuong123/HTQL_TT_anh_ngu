@@ -4,15 +4,26 @@
     <td>{{ $loop->iteration }}</td>
     <td>{{ $td->ma }}</td>
     <td>{{ $td->ten }}</td>
-    <td>{!! $td->mota !!}</td>
+
     <td>{{ $td->kynang->ten??'chua có' }}</td>
 
+    <td>
+        @if ($td->dongia)
+        {{ number_format($td->dongia->hocphi, 0, ',', '.') }} VNĐ
+        @else
+        Chưa có
+        @endif
+    </td>
+    <td>{{ $td->dongia?->namhoc?->nam ?? 'Chưa có' }}</td>
+    <td>{!! $td->mota !!}</td>
+
     <td class="col-action">
-        <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a>
+        <!-- <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a> -->
         <a href="javascript:void(0);"
             class="btn btn-sm btn-warning btn-sua-trinhdo"
             data-id="{{ $td->ma }}"
             data-ten="{{ $td->ten }}"
+
             data-mota="{!!  htmlspecialchars($td->mota)!!}">
             Sửa
         </a>
@@ -26,7 +37,7 @@
 @endforeach
 @else
 <tr>
-    <td colspan="6" class="text-center text-danger">
+    <td colspan="8" class="text-center text-danger">
         Không tìm thấy kết quả nào phù hợp với từ khóa: <strong>{{ request('tu_khoa') }}</strong>
     </td>
 </tr>

@@ -20,7 +20,7 @@
 
         <h3 class="card-title">Danh sách học viên</h3>
         <div class="toolbar mb-3 d-flex justify-content-between align-items-center">
-            <button type="button" class="btn btn-primary btn-them-hocvien">Thêm mới</button>
+            <button type="button" class="btn btn-primary btn-them-hocvien">+ Thêm mới</button>
             <form class="search-form" action="" method="GET" style="position: relative;">
                 <input type="search" id="search" name="tu_khoa" placeholder="Tìm kiếm" autocomplete="off" class="form-control" />
                 <div id="search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; z-index: 100;"></div>

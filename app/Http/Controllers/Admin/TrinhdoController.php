@@ -29,7 +29,7 @@ class TrinhdoController extends Controller
         $perPage = $request->input('per_page', 5);
         // $query = TrinhDo::query();
         // $dstrinhdo = $query->paginate($perPage)->appends($request->all());
-        $dstrinhdo = TrinhDo::with('kynang', 'donGias.namhoc')->paginate($perPage)->appends($request->all());
+        $dstrinhdo = TrinhDo::with('kynang', 'dongia.namhoc')->paginate($perPage)->appends($request->all());
         $lastCourse = TrinhDo::orderBy('ma', 'desc')->first();
         if ($lastCourse) {
             $lastNumber = (int) substr($lastCourse->ma, 2);

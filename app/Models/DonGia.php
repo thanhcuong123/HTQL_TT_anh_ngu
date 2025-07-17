@@ -22,7 +22,7 @@ class DonGia extends Model
     const CREATED_AT = 'create_at';
     const UPDATED_AT = 'update_at';
 
-    public function trinhDo()
+    public function trinhdo()
     {
         return $this->belongsTo(TrinhDo::class, 'trinhdo_id');
     }

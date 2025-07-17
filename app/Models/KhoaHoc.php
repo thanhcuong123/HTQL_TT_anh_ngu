@@ -16,10 +16,11 @@ class KhoaHoc extends Model
     protected $fillable = [
         'ma',
         'ten',
-        'hinhanh',
         'mota',
         'thoiluong',
         'sobuoi',
+        'hinhanh',
+
     ];
 
     const CREATED_AT = 'create_at';
@@ -28,5 +29,9 @@ class KhoaHoc extends Model
     public function lopHocs()
     {
         return $this->hasMany(LopHoc::class, 'khoahoc_id');
+    }
+    public function TuVans()
+    {
+        return $this->hasMany(TuVan::class, 'khoahoc_id');
     }
 }

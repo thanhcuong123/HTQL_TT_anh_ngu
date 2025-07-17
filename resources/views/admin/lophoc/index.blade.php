@@ -167,7 +167,7 @@
             <div class="container">
                 <div class="toolbar mb-3 d-flex justify-content-between align-items-center">
                     <form action="" method="GET" class="mb-3 d-flex align-items-end gap-3 flex-wrap">
-                        <button type="button" class="btn btn-primary btn-them" style="margin-right: 5px;">Thêm mới</button>
+                        <button type="button" class="btn btn-primary btn-them" style="margin-right: 5px;"> + Thêm mới</button>
                         <div>
                             <label for="per_page">Chọn số trang cần hiển thị:</label>
                             <select name="per_page" id="per_page" onchange="this.form.submit()" class="form-select form-select-sm w-auto d-inline-block ms-2">
@@ -190,7 +190,7 @@
                         </div>
                         <a href="{{ route('lophoc.index') }}" class="btn btn-sm btn-info" style="width:100px;margin-left:10px"><i class="bi bi-eye"></i>xóa lọc</a>
                     </form>
-                    <form class="search-form" action="{{ route('lophoc.search') }}" method="GET" style="position: relative;">
+                    <form class="search-form" action="" method="GET" style="position: relative;">
                         <input type="search" id="search" name="tu_khoa" placeholder="Tìm kiếm" autocomplete="off" class="form-control" />
                         <div id="search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; z-index: 100;"></div>
                         <a href="{{ route('lophoc.index') }}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i>xóa lọc</a>
@@ -252,23 +252,39 @@
                 <h4>Thêm Mới Lớp Học</h4>
                 <button type="button" class="popup-close" data-target="addLopHocPopup">&times;</button>
             </div>
-            <form id="addLopHocForm" action="{{ route('lophoc.store') }}" method="POST">
+            <form id="addLopHocForm" action="{{ route('lophoc.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
+                <!-- <div class="form-group mb-3">
+                    <label for="malophoc">Mã lớp học:</label>
+                    <input type="text" class="form-control" id="malophoc" name="malophoc" required>
+                </div> -->
+
+                <label for="malophoc">Mã lớp học</label>
+                <input type="text" name="ma_hienthi" id="ma_hienthi" value="{{ $newMa }}" class="form-control" disabled>
+                <input type="hidden" name="malophoc" value="{{ $newMa }}">
+
                 <div class="form-group mb-3">
                     <label for="tenlophoc">Tên lớp học:</label>
                     <input type="text" class="form-control" id="tenlophoc" name="tenlophoc" required>
                 </div>
+
                 <div class="form-group mb-3">
-                    <label for="malophoc">Mã lớp học:</label>
-                    <input type="text" class="form-control" id="malophoc" name="malophoc" required>
+                    <label for="hinhanh">Hình ảnh lớp học:</label>
+                    <input type="file" class="form-control" id="hinhanh" name="hinhanh" accept="image/*">
+                    <small class="form-text text-muted">Chọn một ảnh cho lớp học (tùy chọn).</small>
                 </div>
                 <div class="form-group mb-3">
                     <label for="ngaybatdau">Ngày bắt đầu:</label>
                     <input type="date" class="form-control" id="ngaybatdau" name="ngaybatdau" required>
                 </div>
+
                 <div class="form-group mb-3">
                     <label for="ngayketthuc">Ngày kết thúc:</label>
                     <input type="date" class="form-control" id="ngayketthuc" name="ngayketthuc" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="soluonghocvientoida">Số lượng học viên tối đa:</label>
+                    <input type="number" class="form-control" id="soluonghocvientoida" name="soluonghocvientoida">
                 </div>
                 <div class="form-group mb-3">
                     <label for="trinhdo_id">Trình độ:</label>
@@ -288,10 +304,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group mb-3">
-                    <label for="lichoc"> Ngày học:</label>
-                    <input type="text" class="form-control" id="lichoc" name="lichoc" required>
-                </div>
+
                 <button type="submit" class="btn btn-primary">Thêm Lớp Học</button>
             </form>
         </div>
@@ -341,10 +354,13 @@
                         data: {
                             tu_khoa: tu_khoa
                         },
+                        dataType: 'html', // Thêm dòng này để chỉ rõ kiểu dữ liệu mong muốn
                         success: function(response) {
+                            console.log("Phản hồi thành công:", response); // In phản hồi ra console
                             $(".course-grid").html(response); // Cập nhật đúng thẻ .course-grid
                         },
-                        error: function() {
+                        error: function(xhr, status, error) {
+                            console.error("Lỗi AJAX:", status, error, xhr.responseText); // In lỗi chi tiết ra console
                             $(".course-grid").html('<div class="text-center text-danger">Lỗi tải dữ liệu</div>');
                         }
                     });

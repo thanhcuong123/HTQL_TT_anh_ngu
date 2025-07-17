@@ -11,6 +11,9 @@
 <link href="{{ asset('admin/luanvantemplate/dist/css/my.css') }}" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{{-- Nếu bạn muốn hỗ trợ tiếng Việt cho Flatpickr --}}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+
 
 <style>
     /* Đồng bộ giao diện cho input và select theo phong cách hiện đại */
@@ -65,6 +68,33 @@
     .mb-3 {
         margin-bottom: 1rem !important;
     }
+
+    /* CSS cho kết quả tìm kiếm */
+    #search-results-list {
+        /* Đổi ID cho phù hợp với cách tìm kiếm client-side */
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        border: 1px solid #eee;
+        border-top: none;
+        max-height: 200px;
+        overflow-y: auto;
+        background-color: #fff;
+    }
+
+    #search-results-list li {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+    }
+
+    #search-results-list li:hover {
+        background-color: #f8f9fa;
+    }
+
+    #search-results-list li:last-child {
+        border-bottom: none;
+    }
 </style>
 
 <div class="card">
@@ -74,17 +104,30 @@
             {{ session('success') }}
         </div>
         @endif
+        @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+        @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ session('warning') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
 
         <h3 class="card-title">Danh sách Giáo viên</h3>
         <div class="toolbar mb-3 d-flex justify-content-between align-items-center">
-            <button type="button" class="btn btn-primary btn-trinhdo">Thêm mới</button>
+            <button type="button" class="btn btn-primary btn-trinhdo">+ Thêm mới</button>
 
-            <form class="search-form" action="" method="GET" style="position: relative;">
-                <input type="search" id="search" name="tu_khoa" placeholder="Tìm kiếm" autocomplete="off" class="form-control" />
-                <div id="search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; z-index: 100;"></div>
-            </form>
+            <div class="search-form" style="position: relative;">
+                <input type="search" id="teacher-search" name="tu_khoa" placeholder="Tìm kiếm giáo viên theo mã, tên, email, SĐT..." autocomplete="off" class="form-control" />
+                {{-- <div id="search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; z-index: 100;"></div> --}}
+            </div>
         </div>
 
+        {{-- Giữ nguyên phần phân trang nếu bạn muốn phân trang Laravel vẫn hoạt động khi không tìm kiếm --}}
         <form action="" method="GET" class="mb-3">
             <label for="per_page">Chọn số trang cần hiển thị:</label>
             <select name="per_page" id="per_page" onchange="this.form.submit()" class="form-select form-select-sm w-auto d-inline-block ms-2">
@@ -101,6 +144,7 @@
                         <th>#</th>
                         <th>Mã giáo viên</th>
                         <th>Tên giáo viên</th>
+                        <th>Hình ảnh</th>
                         <th>Email</th>
                         <th>Chức danh</th>
                         <th>Chuyên môn</th>
@@ -113,17 +157,40 @@
                         <th class="col-action">Hành động</th>
                     </tr>
                 </thead>
-                <tbody id="kq-timkiem">
-                    @foreach($dsgiaovien as $gv)
-                    <tr>
+                <tbody id="teacher-list-tbody"> {{-- Đổi ID từ kq-timkiem sang teacher-list-tbody để dễ quản lý --}}
+                    @forelse($dsgiaovien as $gv)
+                    <tr
+                        data-id="{{ $gv->id }}"
+                        data-magiaovien="{{ $gv->magiaovien }}"
+                        data-ten="{{ $gv->ten }}"
+                        data-image="{{ $gv->hinhanh ?? '' }}"
+                        data-email="{{ $gv->user->email ?? '' }}"
+                        data-chucdanh="{{ $gv->chucdanh->ten ?? '' }}"
+                        data-chuyenmon="{{ $gv->chuyenmon->tenchuyenmon ?? '' }}"
+                        data-hocvi="{{ $gv->hocvi->tenhocvi ?? '' }}"
+                        data-diachi="{{ $gv->diachi }}"
+                        data-sdt="{{ $gv->sdt }}"
+                        data-ngaysinh="{{ $gv->ngaysinh }}"
+                        data-gioitinh="{{ $gv->gioitinh }}"
+                        data-trangthai="{{ $gv->trangthai }}"
+                        data-chucdanh_id="{{ $gv->chucdanh_id }}"
+                        data-chuyenmon_id="{{ $gv->chuyenmon_id }}"
+                        data-hocvi_id="{{ $gv->hocvi_id }}"
+                        data-stk="{{ $gv->stk }}">
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $gv->magiaovien }}</td>
                         <td>{{ $gv->ten }}</td>
-                        <td>{{ $gv->user->email }}</td>
-                        <td>{{ $gv->chucdanh->ten ??'""' }}</td>
-                        <td>{{ $gv->chuyenmon->tenchuyenmon ??'""' }}</td>
-
-                        <td>{{ $gv->hocvi->tenhocvi ??'""'}}</td>
+                        <td> {{-- Cột hình ảnh mới --}}
+                            @if($gv->hinhanh)
+                            <img src="{{ asset('storage/teacher_images/' . $gv->hinhanh) }}" alt="Ảnh giáo viên" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                            @else
+                            Không ảnh
+                            @endif
+                        </td>
+                        <td>{{ $gv->user->email ?? '' }}</td>
+                        <td>{{ $gv->chucdanh->ten ?? '' }}</td>
+                        <td>{{ $gv->chuyenmon->tenchuyenmon ?? '' }}</td>
+                        <td>{{ $gv->hocvi->tenhocvi ?? '' }}</td>
                         <td>{!! $gv->diachi !!}</td>
                         <td>{{ $gv->sdt }}</td>
                         <td>{{ $gv->ngaysinh }}</td>
@@ -136,27 +203,30 @@
                                 data-id="{{ $gv->id }}"
                                 data-magiaovien="{{ $gv->magiaovien }}"
                                 data-ten="{{ $gv->ten }}"
-                                data-email="{{ $gv->user->email }}"
+                                data-email="{{ $gv->user->email ?? '' }}"
                                 data-diachi="{{ $gv->diachi }}"
                                 data-chucdanh_id="{{ $gv->chucdanh_id }}"
                                 data-chuyenmon_id="{{ $gv->chuyenmon_id }}"
                                 data-hocvi_id="{{ $gv->hocvi_id }}"
                                 data-sdt="{{ $gv->sdt }}"
                                 data-stk="{{ $gv->stk }}"
-
                                 data-ngaysinh="{{ $gv->ngaysinh }}"
                                 data-gioitinh="{{ $gv->gioitinh }}"
                                 data-trangthai="{{ $gv->trangthai }}">
                                 Sửa
                             </a>
-                            <form action="" method="POST" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa?')">
+                            <form action="{{ route('giaovien.destroy', $gv->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
                             </form>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="13" class="text-center">Không có giáo viên nào.</td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
 
@@ -166,9 +236,6 @@
         </div>
     </div>
 
-    <!-- Popup thêm giáo viên -->
-
-    <!-- Popup thêm giáo viên -->
     <div class="modal fade" id="addClassModal" tabindex="-1" aria-labelledby="addClassModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -177,13 +244,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="addClassForm" action="{{ route('giaovien.store') }}" method="POST">
+                    <form id="addClassForm" action="{{ route('giaovien.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
                         <div class="mb-3">
-
                             <label for="magiaovien">Mã giáo viên</label>
-                            <input type="magiaovien" name="magiaovien" class="form-control" id="magiaovien" value="{{ $newMa }}" disabled>
+                            <input type="text" name="magiaovien_display" class="form-control" id="magiaovien" value="{{ $newMa }}" disabled>
                             <input type="hidden" name="magiaovien" value="{{ $newMa }}">
                         </div>
                         <div class="mb-3">
@@ -238,6 +304,10 @@
                             </select>
                         </div>
                         <div class="mb-3">
+                            <label for="image" class="form-label">Hình ảnh</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        </div>
+                        <div class="mb-3">
                             <label for="diachi" class="form-label">Địa chỉ</label>
                             <input type="text" class="form-control" id="diachi" name="diachi" placeholder="Nhập địa chỉ">
                         </div>
@@ -255,10 +325,10 @@
             </div>
         </div>
     </div>
-    <!-- Popup chỉnh sửa giáo viên -->
+
     <div class="modal fade" id="editTeacherModal" tabindex="-1" aria-labelledby="editTeacherModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="editTeacherForm" method="POST" action="">
+            <form id="editTeacherForm" method="POST" action="" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="modal-content">
@@ -270,7 +340,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="edit_magiaovien" class="form-label">Mã giáo viên</label>
-                            <input type="text" id="edit_magiaovien" name="magiaovien" class="form-control" placeholder="Nhập mã giáo viên">
+                            <input type="text" id="edit_magiaovien" name="magiaovien" class="form-control" placeholder="Nhập mã giáo viên" readonly>
                         </div>
 
                         <div class="mb-3">
@@ -331,6 +401,17 @@
                                 <option value="nữ">Nữ</option>
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label for="edit_image" class="form-label">Hình ảnh</label>
+                            {{-- Hiển thị ảnh hiện tại (nếu có) --}}
+                            <div id="current_image_preview" style="margin-bottom: 10px;">
+                                @if(isset($gv) && $gv->hinhanh)
+                                <img src="{{ asset('storage/teacher_images/' . $gv->hinhanh) }}" alt="Ảnh hiện tại" style="max-width: 100px; max-height: 100px; object-fit: cover;">
+                                @endif
+                            </div>
+                            <input type="file" class="form-control" id="edit_image" name="image" accept="image/*">
+                            <small class="form-text text-muted">Chọn file ảnh mới nếu bạn muốn thay đổi.</small>
+                        </div>
 
                         <div class="mb-3">
                             <label for="edit_diachi" class="form-label">Địa chỉ</label>
@@ -356,51 +437,223 @@
             </form>
         </div>
     </div>
-
-
-
     <script>
-        document.querySelector('.btn-trinhdo').addEventListener('click', function() {
-            var myModal = new bootstrap.Modal(document.getElementById('addClassModal'));
-            myModal.show();
-        });
+        // Khởi tạo một mảng JavaScript để lưu trữ tất cả giáo viên
+        let allTeachers = [];
 
-        document.querySelectorAll('.btn-sua-giaovien').forEach(button => {
-            button.addEventListener('click', function() {
-                const id = this.dataset.id;
-                const magiaovien = this.dataset.magiaovien || '';
-                const email = this.dataset.email || '';
-                const chucdanh_id = this.dataset.chucdanh_id || '';
-                const hocvi_id = this.dataset.hocvi_id || '';
-                const chuyenmon_id = this.dataset.chuyenmon_id || '';
-                const ten = this.dataset.ten || '';
-                const sdt = this.dataset.sdt || '';
-                const ngaysinh = this.dataset.ngaysinh || '';
-                const gioitinh = this.dataset.gioitinh || '';
-                const diachi = this.dataset.diachi || '';
-                const stk = this.dataset.stk || '';
-                const trangthai = this.dataset.trangthai || '';
+        $(document).ready(function() {
+            console.log("Document ready and jQuery is loaded."); // Debug 1: Kiểm tra jQuery
 
-                const form = document.getElementById('editTeacherForm');
-                form.action = `/giaovien/update/${id}`; // Cập nhật đường route tương ứng
-
-                form.querySelector('#edit_magiaovien').value = magiaovien;
-                form.querySelector('#edit_email').value = email;
-                form.querySelector('#edit_chucdanh_id').value = chucdanh_id;
-                form.querySelector('#edit_hocvi_id').value = hocvi_id;
-                form.querySelector('#edit_chuyenmon_id').value = chuyenmon_id;
-                form.querySelector('#edit_ten').value = ten;
-                form.querySelector('#edit_sdt').value = sdt;
-                form.querySelector('#edit_ngaysinh').value = ngaysinh;
-                form.querySelector('#edit_gioitinh').value = gioitinh;
-                form.querySelector('#edit_diachi').value = diachi;
-                form.querySelector('#edit_stk').value = stk;
-                form.querySelector('#edit_trangthai').value = trangthai;
-
-                const editModal = new bootstrap.Modal(document.getElementById('editTeacherModal'));
-                editModal.show();
+            // Lấy dữ liệu giáo viên từ DOM và lưu vào allTeachers
+            $('#teacher-list-tbody tr').each(function(index) {
+                const teacherData = $(this).data(); // Lấy tất cả data-* attributes
+                if (Object.keys(teacherData).length > 0) {
+                    allTeachers.push(teacherData);
+                    // console.log(`Teacher row ${index} data:`, teacherData); // Debug 2: Kiểm tra dữ liệu từng hàng
+                }
             });
-        });
+            console.log("All teachers data loaded:", allTeachers); // Debug 3: Kiểm tra toàn bộ mảng
+
+            // Ghi đè sự kiện tìm kiếm hiện có
+            $("#teacher-search").off("keyup").on("keyup", function() {
+                const searchTerm = $(this).val().toLowerCase();
+                displayTeachers(searchTerm);
+            });
+
+            // Mở popup khi click nút "Thêm mới"
+            document.querySelector('.btn-trinhdo').addEventListener('click', function() {
+                console.log("Add new teacher button clicked."); // Debug 4: Kiểm tra nút Thêm mới
+                var myModal = new bootstrap.Modal(document.getElementById('addClassModal'));
+                myModal.show();
+            });
+
+            // =========================================================================
+            // PHẦN QUAN TRỌNG NHẤT: Xử lý sự kiện click cho nút "Sửa"
+            // =========================================================================
+            $(document).on('click', '.btn-sua-giaovien', function(e) {
+                e.preventDefault(); // Ngăn chặn hành vi mặc định của thẻ <a>
+
+                console.log("Edit teacher button clicked!"); // Debug 5: Kiểm tra click
+                const button = $(this); // Lấy đối tượng jQuery của nút được click
+
+                // Lấy dữ liệu từ data-attributes của chính nút đó
+                const id = button.data('id');
+                const magiaovien = button.data('magiaovien') || '';
+                const email = button.data('email') || '';
+                const chucdanh_id = button.data('chucdanh_id') || '';
+                const hocvi_id = button.data('hocvi_id') || '';
+                const chuyenmon_id = button.data('chuyenmon_id') || '';
+                const ten = button.data('ten') || '';
+                const sdt = button.data('sdt') || '';
+                const ngaysinh = button.data('ngaysinh') || '';
+                const gioitinh = button.data('gioitinh') || '';
+                const diachi = button.data('diachi') || '';
+                const stk = button.data('stk') || '';
+                const trangthai = button.data('trangthai') || '';
+
+                console.log("Teacher ID:", id); // Debug 6: Kiểm tra ID
+                console.log("Teacher Data (from button data):", button.data()); // Debug 7: Kiểm tra tất cả data-*
+
+                const form = $('#editTeacherForm'); // Sử dụng jQuery selector cho form
+                form.attr('action', `/giaovien/update/${id}`); // Cập nhật đường route tương ứng
+
+                // Điền dữ liệu vào form
+                $('#edit_magiaovien').val(magiaovien);
+                $('#edit_email').val(email);
+                $('#edit_chucdanh_id').val(chucdanh_id);
+                $('#edit_hocvi_id').val(hocvi_id);
+                $('#edit_chuyenmon_id').val(chuyenmon_id);
+                $('#edit_ten').val(ten);
+                $('#edit_sdt').val(sdt);
+                $('#edit_ngaysinh').val(ngaysinh);
+                $('#edit_gioitinh').val(gioitinh);
+                $('#edit_diachi').val(diachi);
+                $('#edit_stk').val(stk);
+                $('#edit_trangthai').val(trangthai);
+
+                // Kiểm tra xem các giá trị đã được điền vào input chưa
+                // console.log("Value of #edit_ten after filling:", $('#edit_ten').val()); // Debug 8
+
+                // Hiển thị modal
+                var editModal = new bootstrap.Modal(document.getElementById('editTeacherModal'));
+                editModal.show();
+                console.log("Modal show command sent."); // Debug 9
+            });
+            // =========================================================================
+
+            // Gọi hàm displayTeachers ban đầu để hiển thị tất cả giáo viên
+            displayTeachers('');
+        }); // End $(document).ready()
+
+        // Hàm hiển thị giáo viên dựa trên từ khóa tìm kiếm
+        function displayTeachers(searchTerm) {
+            let teacherRowsHtml = '';
+            let hasVisibleTeachers = false;
+
+            // Bỏ phần phân trang Laravel nếu bạn muốn tìm kiếm trên tất cả dữ liệu
+            // Nếu không, bạn sẽ chỉ tìm kiếm trên dữ liệu của trang hiện tại.
+
+
+            if (allTeachers.length > 0) {
+                allTeachers.forEach(function(teacher, index) { // Thêm index để có thể dùng cho số thứ tự
+                    // Debug: Kiểm tra cấu trúc của từng đối tượng teacher
+                    // console.log("Processing teacher:", teacher);
+
+                    const magiaovien = (teacher.magiaovien || '').toLowerCase();
+                    const ten = (teacher.ten || '').toLowerCase();
+                    const email = (teacher.email || '').toLowerCase();
+                    const sdt = (teacher.sdt ? String(teacher.sdt) : '').toLowerCase();
+                    const chucdanh = (teacher.chucdanh ? String(teacher.chucdanh) : '').toLowerCase(); // Chắc chắn là chuỗi
+                    const chuyenmon = (teacher.chuyenmon ? String(teacher.chuyenmon) : '').toLowerCase(); // Chắc chắn là chuỗi
+                    const hocvi = (teacher.hocvi ? String(teacher.hocvi) : '').toLowerCase(); // Chắc chắn là chuỗi
+                    const diachi = (teacher.diachi || '').toLowerCase();
+                    const ngaysinh = (teacher.ngaysinh || '').toLowerCase();
+                    const gioitinh = (teacher.gioitinh || '').toLowerCase();
+                    const trangthai = (teacher.trangthai || '').toLowerCase();
+
+
+                    // Kiểm tra xem giáo viên có khớp với từ khóa tìm kiếm không
+                    const matchesSearch = searchTerm === '' ||
+                        magiaovien.includes(searchTerm) ||
+                        ten.includes(searchTerm) ||
+                        email.includes(searchTerm) ||
+                        sdt.includes(searchTerm) ||
+                        chucdanh.includes(searchTerm) ||
+                        chuyenmon.includes(searchTerm) ||
+                        hocvi.includes(searchTerm) ||
+                        diachi.includes(searchTerm) ||
+                        ngaysinh.includes(searchTerm) ||
+                        gioitinh.includes(searchTerm) ||
+                        trangthai.includes(searchTerm);
+
+                    if (matchesSearch) {
+                        hasVisibleTeachers = true;
+                        // Để giữ số thứ tự đúng với bảng gốc, dùng loop->iteration
+                        // Nhưng nếu bạn đang lọc từ `allTeachers` mà nó không còn là một collection Laravel,
+                        // thì `loop->iteration` sẽ không còn đúng nữa.
+                        // Bạn có thể dùng `index + 1` nếu `allTeachers` là một mảng JavaScript thuần.
+                        // Tuy nhiên, để giữ sự nhất quán với phân trang Laravel,
+                        // tốt nhất là giữ nguyên dữ liệu gốc trong DOM và chỉ ẩn/hiện hàng.
+                        // Hoặc, nếu muốn tìm kiếm trên toàn bộ dữ liệu, bạn cần truyền tất cả data từ controller.
+
+                        // Ở đây tôi sẽ vẫn giữ việc tạo HTML dynamically,
+                        // nhưng bạn cần đảm bảo các giá trị chucdanh, chuyenmon, hocvi là chuỗi từ data-attributes.
+                        // Lưu ý: Các giá trị data-chucdanh, data-chuyenmon, data-hocvi được đọc từ các thuộc tính trên <tr>,
+                        // không phải là đối tượng. Do đó, cần kiểm tra lại cách bạn đang gán chúng.
+                        // Trong template Blade, bạn đã gán `data-chucdanh="{{ $gv->chucdanh->ten ?? '' }}"`,
+                        // nên trong JS, `teacher.chucdanh` sẽ là chuỗi tên chứ không phải đối tượng.
+
+                        teacherRowsHtml += `
+                        <tr
+                            data-id="${teacher.id}"
+                            data-magiaovien="${teacher.magiaovien || ''}"
+                            data-ten="${teacher.ten || ''}"
+                             data-image="${teacher.image || ''}" {{-- Đảm bảo data-image có ở đây --}}
+                            data-email="${teacher.email || ''}"
+                            data-chucdanh="${teacher.chucdanh || ''}"
+                            data-chuyenmon="${teacher.chuyenmon || ''}"
+                            data-hocvi="${teacher.hocvi || ''}"
+                            data-diachi="${teacher.diachi || ''}"
+                            data-sdt="${teacher.sdt || ''}"
+                            data-ngaysinh="${teacher.ngaysinh || ''}"
+                            data-gioitinh="${teacher.gioitinh || ''}"
+                            data-trangthai="${teacher.trangthai || ''}"
+                            data-chucdanh_id="${teacher.chucdanh_id || ''}"
+                            data-chuyenmon_id="${teacher.chuyenmon_id || ''}"
+                            data-hocvi_id="${teacher.hocvi_id || ''}"
+                            data-stk="${teacher.stk || ''}"
+                        >
+                            <td>${index + 1}</td> <td>${teacher.magiaovien || ''}</td>
+                            <td>${teacher.ten || ''}</td>
+                             <td> {{-- Cột hình ảnh trong JS --}}
+            ${teacher.image ? `<img src="${window.location.origin}/storage/teacher_images/${teacher.image}" alt="Ảnh giáo viên" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">` : 'Không ảnh'}
+        </td>
+                            <td>${teacher.email || ''}</td>
+                            <td>${teacher.chucdanh || ''}</td>
+                            <td>${teacher.chuyenmon || ''}</td>
+                            <td>${teacher.hocvi || ''}</td>
+                            <td>${teacher.diachi || ''}</td>
+                            <td>${teacher.sdt || ''}</td>
+                            <td>${teacher.ngaysinh || ''}</td>
+                            <td>${teacher.gioitinh || ''}</td>
+                            <td>${teacher.trangthai || ''}</td>
+                            <td class="col-action">
+                                <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a>
+                                <a href="javascript:void(0);"
+                                    class="btn btn-sm btn-warning btn-sua-giaovien"
+                                    data-id="${teacher.id}"
+                                    data-magiaovien="${teacher.magiaovien || ''}"
+                                    data-ten="${teacher.ten || ''}"
+                                    data-email="${teacher.email || ''}"
+                                    data-diachi="${teacher.diachi || ''}"
+                                    data-chucdanh_id="${teacher.chucdanh_id || ''}"
+                                    data-chuyenmon_id="${teacher.chuyenmon_id || ''}"
+                                    data-hocvi_id="${teacher.hocvi_id || ''}"
+                                    data-sdt="${teacher.sdt || ''}"
+                                    data-stk="${teacher.stk || ''}"
+                                    data-ngaysinh="${teacher.ngaysinh || ''}"
+                                    data-gioitinh="${teacher.gioitinh || ''}"
+                                    data-trangthai="${teacher.trangthai || ''}">
+                                    Sửa
+                                </a>
+                                <form action="/giaovien/destroy/${teacher.id}" method="POST" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                    `;
+                    }
+                });
+            }
+
+            if (!hasVisibleTeachers) {
+                teacherRowsHtml = '<tr><td colspan="13" class="text-center">Không tìm thấy giáo viên nào phù hợp.</td></tr>';
+            }
+
+            $('#teacher-list-tbody').html(teacherRowsHtml);
+        }
     </script>
     <script src="{{ asset('admin/luanvantemplate/dist/js/my.js') }}"></script>
     @endsection
