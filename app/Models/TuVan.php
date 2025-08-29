@@ -22,6 +22,7 @@ class TuVan extends Model
         'sdt',
         'dotuoi',
         'khoahoc_id',
+        'trinhdo_id',
         'loinhan',
         'trangthai', // Thêm trường trạng thái
         'ghichu',    // Thêm trường ghi chú
@@ -40,5 +41,9 @@ class TuVan extends Model
     public function khoaHoc()
     {
         return $this->belongsTo(KhoaHoc::class, 'khoahoc_id');
+    }
+    public function trinhdo()
+    {
+        return $this->belongsTo(TrinhDo::class, 'trinhdo_id');
     }
 }

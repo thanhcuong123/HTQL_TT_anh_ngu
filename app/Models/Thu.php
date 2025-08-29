@@ -21,4 +21,10 @@ class Thu extends Model
     // THÊM HAI DÒNG NÀY ĐỂ KHỚP VỚI TÊN CỘT TRONG CSDL CỦA BẠN
     const CREATED_AT = 'create_at';
     const UPDATED_AT = 'update_at';
+    public function thoiKhoaBieus()
+    {
+        return $this->belongsToMany(ThoiKhoaBieu::class, 'thoi_khoa_bieu_thu', 'thu_id', 'thoi_khoa_bieu_id');
+        // Lưu ý: Đây chỉ là ví dụ nếu bạn có bảng trung gian. 
+        // Nếu bạn lưu 'thu_ids' dưới dạng JSON trong ThoiKhoaBieu, thì không cần mối quan hệ này.
+    }
 }

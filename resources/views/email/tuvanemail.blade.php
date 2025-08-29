@@ -17,7 +17,7 @@
     {{ $loinhan ?? 'Không có' }}
 
     Chúng tôi sẽ xem xét yêu cầu của bạn và liên hệ lại trong thời gian sớm nhất để hỗ trợ bạn tốt nhất.
-    Mọi thắc mắc xin liên hệ thanhcuongstudent@gmail.com hoặc sdt 0702892014.
+    Mọi thắc mắc xin liên hệ river@gmail.edu.vn hoặc sdt 0702892014.
 
     Trân trọng,
     Trung tâm Anh ngữ River

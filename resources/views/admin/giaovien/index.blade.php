@@ -16,6 +16,51 @@
 
 
 <style>
+    /* Custom styles for larger modal content */
+    .modal-dialog {
+        max-width: 1000px;
+        /* Set a maximum width for the modal */
+        width: 100%;
+        /* Allow the modal to take full width up to the max-width */
+    }
+
+    .modal-content {
+        padding: 20px;
+        /* Add padding for better spacing */
+        border-radius: 8px;
+        /* Rounded corners for a modern look */
+    }
+
+    /* Optional: Increase the height of the modal body */
+    .modal-body {
+        max-height: 800px;
+        /* Set a maximum height for the modal body */
+        overflow-y: auto;
+        /* Enable scrolling if content exceeds max height */
+    }
+
+    /* Style for modal headers */
+    .modal-header {
+        background-color: #f8f9fa;
+        /* Light background for header */
+        border-bottom: 1px solid #dee2e6;
+        /* Subtle border */
+    }
+
+    /* Style for modal titles */
+    .modal-title {
+        font-size: 1.5rem;
+        /* Larger title font size */
+        font-weight: bold;
+        /* Bold title */
+    }
+
+    /* Style for modal footers */
+    .modal-footer {
+        justify-content: space-between;
+        /* Space between buttons */
+    }
+
     /* Đồng bộ giao diện cho input và select theo phong cách hiện đại */
     input.form-control,
     select.form-select {
@@ -164,7 +209,7 @@
                         data-magiaovien="{{ $gv->magiaovien }}"
                         data-ten="{{ $gv->ten }}"
                         data-image="{{ $gv->hinhanh ?? '' }}"
-                        data-email="{{ $gv->user->email ?? '' }}"
+                        data-email_gv="{{ $gv->email_gv ?? '' }}"
                         data-chucdanh="{{ $gv->chucdanh->ten ?? '' }}"
                         data-chuyenmon="{{ $gv->chuyenmon->tenchuyenmon ?? '' }}"
                         data-hocvi="{{ $gv->hocvi->tenhocvi ?? '' }}"
@@ -187,7 +232,7 @@
                             Không ảnh
                             @endif
                         </td>
-                        <td>{{ $gv->user->email ?? '' }}</td>
+                        <td>{{ $gv->email_gv ?? '' }}</td>
                         <td>{{ $gv->chucdanh->ten ?? '' }}</td>
                         <td>{{ $gv->chuyenmon->tenchuyenmon ?? '' }}</td>
                         <td>{{ $gv->hocvi->tenhocvi ?? '' }}</td>
@@ -197,13 +242,13 @@
                         <td>{{ $gv->gioitinh }}</td>
                         <td>{{ $gv->trangthai }}</td>
                         <td class="col-action">
-                            <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a>
+                            <!-- <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a> -->
                             <a href="javascript:void(0);"
                                 class="btn btn-sm btn-warning btn-sua-giaovien"
                                 data-id="{{ $gv->id }}"
                                 data-magiaovien="{{ $gv->magiaovien }}"
                                 data-ten="{{ $gv->ten }}"
-                                data-email="{{ $gv->user->email ?? '' }}"
+                                data-email_gv="{{ $gv->email_gv ?? '' }}"
                                 data-diachi="{{ $gv->diachi }}"
                                 data-chucdanh_id="{{ $gv->chucdanh_id }}"
                                 data-chuyenmon_id="{{ $gv->chuyenmon_id }}"
@@ -237,97 +282,113 @@
     </div>
 
     <div class="modal fade" id="addClassModal" tabindex="-1" aria-labelledby="addClassModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg"> <!-- modal rộng hơn -->
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addClassModalLabel">Thêm giáo viên</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
                 <div class="modal-body">
                     <form id="addClassForm" action="{{ route('giaovien.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
-                        <div class="mb-3">
-                            <label for="magiaovien">Mã giáo viên</label>
-                            <input type="text" name="magiaovien_display" class="form-control" id="magiaovien" value="{{ $newMa }}" disabled>
-                            <input type="hidden" name="magiaovien" value="{{ $newMa }}">
+                        <div class="row">
+                            <!-- Cột bên trái -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="magiaovien">Mã giáo viên</label>
+                                    <input type="text" name="magiaovien_display" class="form-control" id="magiaovien" value="{{ $newMa }}" disabled>
+                                    <input type="hidden" name="magiaovien" value="{{ $newMa }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="ten" class="form-label">Tên giáo viên</label>
+                                    <input type="text" class="form-control" id="ten" name="ten" required placeholder="Nhập tên giáo viên">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" required placeholder="Nhập Email">
+                                    <div id="email-error" class="text-danger small"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="sdt" class="form-label">Số điện thoại</label>
+                                    <input type="text" class="form-control" id="sdt" name="sdt" placeholder="Nhập số điện thoại">
+                                    <div id="sdt-error" class="text-danger small"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="ngaysinh" class="form-label">Ngày sinh</label>
+                                    <input type="date" class="form-control" id="ngaysinh" name="ngaysinh">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="gioitinh" class="form-label">Giới tính</label>
+                                    <select class="form-select" id="gioitinh" name="gioitinh">
+                                        <option value="">-- Chọn giới tính --</option>
+                                        <option value="nam">Nam</option>
+                                        <option value="nữ">Nữ</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Cột bên phải -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="chucdanh_id" class="form-label">Chức danh</label>
+                                    <select class="form-select" id="chucdanh_id" name="chucdanh_id" required>
+                                        <option value="">-- Chọn chức danh --</option>
+                                        @foreach($chucdanh as $cd)
+                                        <option value="{{ $cd->id }}">{{ $cd->ten }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="hocvi_id" class="form-label">Học vị</label>
+                                    <select class="form-select" id="hocvi_id" name="hocvi_id" required>
+                                        <option value="">-- Chọn học vị --</option>
+                                        @foreach($hocvi as $hv)
+                                        <option value="{{ $hv->id }}">{{ $hv->tenhocvi }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="chuyenmon_id" class="form-label">Chuyên môn</label>
+                                    <select class="form-select" id="chuyenmon_id" name="chuyenmon_id" required>
+                                        <option value="">-- Chọn chuyên môn --</option>
+                                        @foreach($chuyenmon as $cm)
+                                        <option value="{{ $cm->id }}">{{ $cm->tenchuyenmon }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="image" class="form-label">Hình ảnh</label>
+                                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="diachi" class="form-label">Địa chỉ</label>
+                                    <input type="text" class="form-control" id="diachi" name="diachi" placeholder="Nhập địa chỉ">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="stk" class="form-label">Số tài khoản</label>
+                                    <input type="text" class="form-control" id="stk" name="stk" placeholder="Nhập số tài khoản">
+                                    <div id="stk-error" class="text-danger small"></div>
+                                </div>
+                                <div class="mb-3" style="display: none;">
+                                    <label for="trangthai" class="form-label">Trạng thái</label>
+                                    <input type="text" class="form-control" id="trangthai" name="trangthai" value="đang dạy" readonly>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required placeholder="Nhập Email">
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">Thêm giáo viên</button>
                         </div>
-                        <div class="mb-3">
-                            <label for="chucdanh_id" class="form-label">Chức danh</label>
-                            <select class="form-select" id="chucdanh_id" name="chucdanh_id" required>
-                                <option value="">-- Chọn chức danh --</option>
-                                @foreach($chucdanh as $cd)
-                                <option value="{{ $cd->id }}">{{ $cd->ten }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="hocvi_id" class="form-label">Học vị</label>
-                            <select class="form-select" id="hocvi_id" name="hocvi_id" required>
-                                <option value="">-- Chọn học vị --</option>
-                                @foreach($hocvi as $hv)
-                                <option value="{{ $hv->id }}">{{ $hv->tenhocvi }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="chuyenmon_id" class="form-label">Chuyên môn</label>
-                            <select class="form-select" id="chuyenmon_id" name="chuyenmon_id" required>
-                                <option value="">-- Chọn chuyên môn --</option>
-                                @foreach($chuyenmon as $cm)
-                                <option value="{{ $cm->id }}">{{ $cm->tenchuyenmon }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="ten" class="form-label">Tên giáo viên</label>
-                            <input type="text" class="form-control" id="ten" name="ten" required placeholder="Nhập tên giáo viên">
-                        </div>
-                        <div class="mb-3">
-                            <label for="sdt" class="form-label">Số điện thoại</label>
-                            <input type="text" class="form-control" id="sdt" name="sdt" placeholder="Nhập số điện thoại">
-                        </div>
-                        <div class="mb-3">
-                            <label for="ngaysinh" class="form-label">Ngày sinh</label>
-                            <input type="date" class="form-control" id="ngaysinh" name="ngaysinh">
-                        </div>
-                        <div class="mb-3">
-                            <label for="gioitinh" class="form-label">Giới tính</label>
-                            <select class="form-select" id="gioitinh" name="gioitinh">
-                                <option value="">-- Chọn giới tính --</option>
-                                <option value="nam">Nam</option>
-                                <option value="nữ">Nữ</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Hình ảnh</label>
-                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                        </div>
-                        <div class="mb-3">
-                            <label for="diachi" class="form-label">Địa chỉ</label>
-                            <input type="text" class="form-control" id="diachi" name="diachi" placeholder="Nhập địa chỉ">
-                        </div>
-                        <div class="mb-3">
-                            <label for="stk" class="form-label">Số tài khoản</label>
-                            <input type="text" class="form-control" id="stk" name="stk" placeholder="Nhập số tài khoản">
-                        </div>
-                        <div class="mb-3">
-                            <label for="trangthai" class="form-label">Trạng thái</label>
-                            <input type="text" class="form-control" id="trangthai" name="trangthai" value="đang dạy" readonly>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Thêm giáo viên</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
+
     <div class="modal fade" id="editTeacherModal" tabindex="-1" aria-labelledby="editTeacherModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg"> <!-- modal-lg để form rộng hơn -->
             <form id="editTeacherForm" method="POST" action="" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
@@ -338,94 +399,104 @@
                     </div>
 
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="edit_magiaovien" class="form-label">Mã giáo viên</label>
-                            <input type="text" id="edit_magiaovien" name="magiaovien" class="form-control" placeholder="Nhập mã giáo viên" readonly>
-                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit_magiaovien" class="form-label">Mã giáo viên</label>
+                                    <input type="text" id="edit_magiaovien" name="magiaovien" class="form-control" readonly>
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="edit_email" class="form-label">Email</label>
-                            <input type="email" id="edit_email" name="email" class="form-control" placeholder="Nhập email">
-                        </div>
+                                <div class="mb-3">
+                                    <label for="edit_email_gv" class="form-label">Email</label>
+                                    <input type="email" id="edit_email_gv" name="email_gv" class="form-control" placeholder="Nhập email">
+                                    <input type="hidden" id="edit_old_email">
+                                    <div id="edit-email-error" class="text-danger small"></div>
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="edit_chucdanh_id" class="form-label">Chức danh</label>
-                            <select id="edit_chucdanh_id" name="chucdanh_id" class="form-select">
-                                <option value="">-- Chọn chức danh --</option>
-                                @foreach($chucdanh as $cd)
-                                <option value="{{ $cd->id }}">{{ $cd->ten }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                                <div class="mb-3">
+                                    <label for="edit_chucdanh_id" class="form-label">Chức danh</label>
+                                    <select id="edit_chucdanh_id" name="chucdanh_id" class="form-select">
+                                        <option value="">-- Chọn chức danh --</option>
+                                        @foreach($chucdanh as $cd)
+                                        <option value="{{ $cd->id }}">{{ $cd->ten }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="edit_hocvi_id" class="form-label">Học vị</label>
-                            <select id="edit_hocvi_id" name="hocvi_id" class="form-select">
-                                <option value="">-- Chọn học vị --</option>
-                                @foreach($hocvi as $hv)
-                                <option value="{{ $hv->id }}">{{ $hv->tenhocvi }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                                <div class="mb-3">
+                                    <label for="edit_hocvi_id" class="form-label">Học vị</label>
+                                    <select id="edit_hocvi_id" name="hocvi_id" class="form-select">
+                                        <option value="">-- Chọn học vị --</option>
+                                        @foreach($hocvi as $hv)
+                                        <option value="{{ $hv->id }}">{{ $hv->tenhocvi }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="edit_chuyenmon_id" class="form-label">Chuyên môn</label>
-                            <select id="edit_chuyenmon_id" name="chuyenmon_id" class="form-select">
-                                <option value="">-- Chọn chuyên môn --</option>
-                                @foreach($chuyenmon as $cm)
-                                <option value="{{ $cm->id }}">{{ $cm->tenchuyenmon }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                                <div class="mb-3">
+                                    <label for="edit_chuyenmon_id" class="form-label">Chuyên môn</label>
+                                    <select id="edit_chuyenmon_id" name="chuyenmon_id" class="form-select">
+                                        <option value="">-- Chọn chuyên môn --</option>
+                                        @foreach($chuyenmon as $cm)
+                                        <option value="{{ $cm->id }}">{{ $cm->tenchuyenmon }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="edit_ten" class="form-label">Tên giáo viên</label>
-                            <input type="text" id="edit_ten" name="ten" class="form-control" required placeholder="Nhập tên giáo viên">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="edit_sdt" class="form-label">Số điện thoại</label>
-                            <input type="text" id="edit_sdt" name="sdt" class="form-control" placeholder="Nhập số điện thoại">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="edit_ngaysinh" class="form-label">Ngày sinh</label>
-                            <input type="date" id="edit_ngaysinh" name="ngaysinh" class="form-control">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="edit_gioitinh" class="form-label">Giới tính</label>
-                            <select id="edit_gioitinh" name="gioitinh" class="form-select">
-                                <option value="">-- Chọn giới tính --</option>
-                                <option value="nam">Nam</option>
-                                <option value="nữ">Nữ</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_image" class="form-label">Hình ảnh</label>
-                            {{-- Hiển thị ảnh hiện tại (nếu có) --}}
-                            <div id="current_image_preview" style="margin-bottom: 10px;">
-                                @if(isset($gv) && $gv->hinhanh)
-                                <img src="{{ asset('storage/teacher_images/' . $gv->hinhanh) }}" alt="Ảnh hiện tại" style="max-width: 100px; max-height: 100px; object-fit: cover;">
-                                @endif
+                                <div class="mb-3">
+                                    <label for="edit_ten" class="form-label">Tên giáo viên</label>
+                                    <input type="text" id="edit_ten" name="ten" class="form-control" required placeholder="Nhập tên giáo viên">
+                                </div>
                             </div>
-                            <input type="file" class="form-control" id="edit_image" name="image" accept="image/*">
-                            <small class="form-text text-muted">Chọn file ảnh mới nếu bạn muốn thay đổi.</small>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="edit_diachi" class="form-label">Địa chỉ</label>
-                            <input type="text" id="edit_diachi" name="diachi" class="form-control" placeholder="Nhập địa chỉ">
-                        </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit_sdt" class="form-label">Số điện thoại</label>
+                                    <input type="text" id="edit_sdt" name="sdt" class="form-control" placeholder="Nhập số điện thoại">
+                                    <input type="hidden" id="edit_old_sdt">
+                                    <div id="edit-sdt-error" class="text-danger small"></div>
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="edit_stk" class="form-label">Số tài khoản</label>
-                            <input type="text" id="edit_stk" name="stk" class="form-control" placeholder="Nhập số tài khoản">
-                        </div>
+                                <div class="mb-3">
+                                    <label for="edit_ngaysinh" class="form-label">Ngày sinh</label>
+                                    <input type="date" id="edit_ngaysinh" name="ngaysinh" class="form-control">
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="edit_trangthai" class="form-label">Trạng thái</label>
-                            <input type="text" id="edit_trangthai" name="trangthai" class="form-control" readonly>
+                                <div class="mb-3">
+                                    <label for="edit_gioitinh" class="form-label">Giới tính</label>
+                                    <select id="edit_gioitinh" name="gioitinh" class="form-select">
+                                        <option value="">-- Chọn giới tính --</option>
+                                        <option value="nam">Nam</option>
+                                        <option value="nữ">Nữ</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="edit_image" class="form-label">Hình ảnh</label>
+                                    <div id="current_image_preview" style="margin-bottom: 10px;">
+                                        @if(isset($gv) && $gv->hinhanh)
+                                        <img src="{{ asset('storage/teacher_images/' . $gv->hinhanh) }}" alt="Ảnh hiện tại" style="max-width: 100px; max-height: 100px; object-fit: cover;">
+                                        @endif
+                                    </div>
+                                    <input type="file" class="form-control" id="edit_image" name="image" accept="image/*">
+                                    <small class="form-text text-muted">Chọn file ảnh mới nếu bạn muốn thay đổi.</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="edit_diachi" class="form-label">Địa chỉ</label>
+                                    <input type="text" id="edit_diachi" name="diachi" class="form-control" placeholder="Nhập địa chỉ">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="edit_stk" class="form-label">Số tài khoản</label>
+                                    <input type="text" id="edit_stk" name="stk" class="form-control" placeholder="Nhập số tài khoản">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="edit_trangthai" class="form-label">Trạng thái</label>
+                                    <input type="text" id="edit_trangthai" name="trangthai" class="form-control" readonly>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -437,9 +508,48 @@
             </form>
         </div>
     </div>
+
     <script>
+        //check trùng lặp 
+        const allEmails = @json($allEmails); // VD: ['a@gmail.com', 'b@gmail.com']
+        const allSdts = @json($allSdts); // VD: ['0988888888', '0977777777']
+        const allStks = @json($allStks);
+        $(document).ready(function() {
+            function checkLocalDuplicate(field, value, list, errorElement, message) {
+                if (list.includes(value.trim())) {
+                    $(errorElement).text(message);
+                } else {
+                    $(errorElement).text('');
+                }
+            }
+
+            $('#email').on('blur keyup', function() {
+                checkLocalDuplicate('email', $(this).val(), allEmails, '#email-error', 'Email này đã tồn tại.');
+            });
+
+            $('#sdt').on('blur keyup', function() {
+                checkLocalDuplicate('sdt', $(this).val(), allSdts, '#sdt-error', 'Số điện thoại đã tồn tại.');
+            });
+
+            $('#stk').on('blur keyup', function() {
+                checkLocalDuplicate('stk', $(this).val(), allStks, '#stk-error', 'Số tài khoản đã tồn tại.');
+            });
+
+            $('#addClassForm').submit(function(e) {
+                if ($('#email-error').text() || $('#sdt-error').text() || $('#stk-error').text()) {
+                    e.preventDefault();
+                    alert('Vui lòng sửa các lỗi trước khi gửi.');
+                }
+            });
+        });
+
+
+
+
+
         // Khởi tạo một mảng JavaScript để lưu trữ tất cả giáo viên
         let allTeachers = [];
+
 
         $(document).ready(function() {
             console.log("Document ready and jQuery is loaded."); // Debug 1: Kiểm tra jQuery
@@ -479,7 +589,7 @@
                 // Lấy dữ liệu từ data-attributes của chính nút đó
                 const id = button.data('id');
                 const magiaovien = button.data('magiaovien') || '';
-                const email = button.data('email') || '';
+                const email_gv = button.data('email_gv') || '';
                 const chucdanh_id = button.data('chucdanh_id') || '';
                 const hocvi_id = button.data('hocvi_id') || '';
                 const chuyenmon_id = button.data('chuyenmon_id') || '';
@@ -495,11 +605,11 @@
                 console.log("Teacher Data (from button data):", button.data()); // Debug 7: Kiểm tra tất cả data-*
 
                 const form = $('#editTeacherForm'); // Sử dụng jQuery selector cho form
-                form.attr('action', `/giaovien/update/${id}`); // Cập nhật đường route tương ứng
+                form.attr('action', `/admin/giaovien/update/${id}`); // Cập nhật đường route tương ứng
 
                 // Điền dữ liệu vào form
                 $('#edit_magiaovien').val(magiaovien);
-                $('#edit_email').val(email);
+                $('#edit_email_gv').val(email_gv);
                 $('#edit_chucdanh_id').val(chucdanh_id);
                 $('#edit_hocvi_id').val(hocvi_id);
                 $('#edit_chuyenmon_id').val(chuyenmon_id);
@@ -510,6 +620,20 @@
                 $('#edit_diachi').val(diachi);
                 $('#edit_stk').val(stk);
                 $('#edit_trangthai').val(trangthai);
+                $('#edit_old_email').val(email_gv);
+                $('#edit_old_sdt').val(sdt);
+                $('#edit_old_stk').val(stk);
+
+                let allEmails = [];
+                let allSdts = [];
+                let allStks = [];
+
+                $('#teacher-list-tbody tr').each(function(index) {
+                    const teacherData = $(this).data();
+                    if (teacherData.email_gv) allEmails.push(teacherData.email_gv);
+                    if (teacherData.sdt) allSdts.push(teacherData.sdt);
+                    if (teacherData.stk) allStks.push(teacherData.stk);
+                });
 
                 // Kiểm tra xem các giá trị đã được điền vào input chưa
                 // console.log("Value of #edit_ten after filling:", $('#edit_ten').val()); // Debug 8
@@ -524,6 +648,55 @@
             // Gọi hàm displayTeachers ban đầu để hiển thị tất cả giáo viên
             displayTeachers('');
         }); // End $(document).ready()
+        function checkEditDuplicate(value, oldValue, list, errorElement, message) {
+            if (value.trim() !== oldValue.trim() && list.includes(value.trim())) {
+                $(errorElement).text(message);
+            } else {
+                $(errorElement).text('');
+            }
+        }
+
+        $('#edit_email_gv').on('blur keyup', function() {
+            checkEditDuplicate(
+                $(this).val(),
+                $('#edit_old_email').val(),
+                allEmails,
+                '#edit-email-error',
+                'Email đã tồn tại!'
+            );
+        });
+
+        $('#edit_sdt').on('blur keyup', function() {
+            checkEditDuplicate(
+                $(this).val(),
+                $('#edit_old_sdt').val(),
+                allSdts,
+                '#edit-sdt-error',
+                'Số điện thoại đã tồn tại!'
+            );
+        });
+
+        $('#edit_stk').on('blur keyup', function() {
+            checkEditDuplicate(
+                $(this).val(),
+                $('#edit_old_stk').val(),
+                allStks,
+                '#edit-stk-error',
+                'Số tài khoản đã tồn tại!'
+            );
+        });
+
+        // Chặn submit nếu còn lỗi
+        $('#editTeacherForm').on('submit', function(e) {
+            if (
+                $('#edit-email-error').text() ||
+                $('#edit-sdt-error').text() ||
+                $('#edit-stk-error').text()
+            ) {
+                e.preventDefault();
+                alert('Vui lòng sửa các lỗi trước khi lưu!');
+            }
+        });
 
         // Hàm hiển thị giáo viên dựa trên từ khóa tìm kiếm
         function displayTeachers(searchTerm) {
@@ -541,7 +714,7 @@
 
                     const magiaovien = (teacher.magiaovien || '').toLowerCase();
                     const ten = (teacher.ten || '').toLowerCase();
-                    const email = (teacher.email || '').toLowerCase();
+                    const email_gv = (teacher.email_gv || '').toLowerCase();
                     const sdt = (teacher.sdt ? String(teacher.sdt) : '').toLowerCase();
                     const chucdanh = (teacher.chucdanh ? String(teacher.chucdanh) : '').toLowerCase(); // Chắc chắn là chuỗi
                     const chuyenmon = (teacher.chuyenmon ? String(teacher.chuyenmon) : '').toLowerCase(); // Chắc chắn là chuỗi
@@ -556,7 +729,7 @@
                     const matchesSearch = searchTerm === '' ||
                         magiaovien.includes(searchTerm) ||
                         ten.includes(searchTerm) ||
-                        email.includes(searchTerm) ||
+                        email_gv.includes(searchTerm) ||
                         sdt.includes(searchTerm) ||
                         chucdanh.includes(searchTerm) ||
                         chuyenmon.includes(searchTerm) ||
@@ -589,7 +762,7 @@
                             data-magiaovien="${teacher.magiaovien || ''}"
                             data-ten="${teacher.ten || ''}"
                              data-image="${teacher.image || ''}" {{-- Đảm bảo data-image có ở đây --}}
-                            data-email="${teacher.email || ''}"
+                            data-email_gv="${teacher.email_gv || ''}"
                             data-chucdanh="${teacher.chucdanh || ''}"
                             data-chuyenmon="${teacher.chuyenmon || ''}"
                             data-hocvi="${teacher.hocvi || ''}"
@@ -608,7 +781,7 @@
                              <td> {{-- Cột hình ảnh trong JS --}}
             ${teacher.image ? `<img src="${window.location.origin}/storage/teacher_images/${teacher.image}" alt="Ảnh giáo viên" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">` : 'Không ảnh'}
         </td>
-                            <td>${teacher.email || ''}</td>
+                            <td>${teacher.email_gv || ''}</td>
                             <td>${teacher.chucdanh || ''}</td>
                             <td>${teacher.chuyenmon || ''}</td>
                             <td>${teacher.hocvi || ''}</td>
@@ -618,13 +791,13 @@
                             <td>${teacher.gioitinh || ''}</td>
                             <td>${teacher.trangthai || ''}</td>
                             <td class="col-action">
-                                <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a>
+                             
                                 <a href="javascript:void(0);"
                                     class="btn btn-sm btn-warning btn-sua-giaovien"
                                     data-id="${teacher.id}"
                                     data-magiaovien="${teacher.magiaovien || ''}"
                                     data-ten="${teacher.ten || ''}"
-                                    data-email="${teacher.email || ''}"
+                                    data-email_gv="${teacher.email_gv || ''}"
                                     data-diachi="${teacher.diachi || ''}"
                                     data-chucdanh_id="${teacher.chucdanh_id || ''}"
                                     data-chuyenmon_id="${teacher.chuyenmon_id || ''}"
@@ -655,5 +828,5 @@
             $('#teacher-list-tbody').html(teacherRowsHtml);
         }
     </script>
-    <script src="{{ asset('admin/luanvantemplate/dist/js/my.js') }}"></script>
+    <!-- <script src="{{ asset('admin/luanvantemplate/dist/js/my.js') }}"></script> -->
     @endsection

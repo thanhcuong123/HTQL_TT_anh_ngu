@@ -4,12 +4,22 @@
     <td>{{ $loop->iteration }}</td>
     <td>{{ $kh->mahocvien }}</td>
     <td>{{ $kh->ten }}</td>
-    <td>{{ $kh->user->email}}</td>
+    <td>{{ $kh->email_hv   }}</td>
     <td>{{ $kh->sdt }}</td>
     <td>{{ $kh->diachi }}</td>
     <td>{{ $kh->ngaysinh}}</td>
     <td>{{ $kh->gioitinh }}</td>
     <td>{{ $kh->ngaydangki }}</td>
+    <td>
+        @if ($kh->lophocs->count() > 0)
+        @foreach ($kh->lophocs as $lh)
+        <span>{{ $lh->tenlophoc }}</span>
+        <br>
+        @endforeach
+        @else
+        Chưa đăng ký
+        @endif
+    </td>
     <td>{{ $kh->trangthai }}</td>
     <td class="col-action">
         <!-- <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a> -->

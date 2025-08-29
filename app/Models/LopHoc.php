@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class LopHoc extends Model
 {
@@ -26,7 +27,8 @@ class LopHoc extends Model
         'soluonghocvienhientai',
         'trangthai',
         'mota',
-        'lichoc'
+        'lichoc',
+        'namhoc_id'
     ];
 
     public function khoaHoc()
@@ -66,5 +68,36 @@ class LopHoc extends Model
     public function thoiKhoaBieus()
     {
         return $this->hasMany(ThoiKhoaBieu::class, 'lophoc_id');
+    }
+    public function thongbaos()
+    {
+        return $this->hasMany(ThongBao::class, 'doituongnhan_id')->where('loaidoituongnhan', 'lop_hoc');
+    }
+    // Trong LopHoc.php
+    public function taiLieuHocTaps()
+    {
+        return $this->hasMany(TaiLieuHocTap::class, 'lophoc_id');
+    }
+    public function getTrangthaiAttribute($value)
+    {
+        $today = Carbon::today();
+        $ngaybatdau = $this->khoahoc ? $this->khoahoc->ngaybatdau : null;
+        $ngayketthuc = $this->khoahoc ? $this->khoahoc->ngayketthuc : null;
+
+        if ($ngaybatdau && $ngayketthuc) {
+            if ($today->lt($ngaybatdau)) {
+                return 'sap_khai_giang';
+            } elseif ($today->between($ngaybatdau, $ngayketthuc)) {
+                return 'dang_hoat_dong';
+            } else {
+                return 'ket_thuc';
+            }
+        }
+
+        return $value; // fallback giá trị cũ
+    }
+    public function namhoc()
+    {
+        return $this->belongsTo(NamHoc::class, 'namhoc_id');
     }
 }

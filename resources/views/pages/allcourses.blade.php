@@ -14,19 +14,28 @@
         </div>
         <div class="row">
             {{-- Loop through the courses passed from the controller --}}
-            @forelse ($khoahocss as $khoaHoc)
+            @forelse ($khoahocsss as $khoaHoc)
             <div class="col-lg-4 col-md-6 pb-4">
                 {{-- Link to the course detail page (assuming 'courses_detail' is your route name) --}}
                 <a class="courses-list-item position-relative d-block overflow-hidden mb-2" href="{{ route('courses_detail', $khoaHoc->id) }}">
                     @if ($khoaHoc->hinhanh)
-                    <img class="img-fluid" src="{{ asset('storage/' . $khoaHoc->hinhanh) }}" alt="{{ $khoaHoc->ten }}">
+                    <img class="img-fluid" src="{{ asset('storage/' . $khoaHoc->hinhanh) }}" alt="{{ $khoaHoc->ma }}">
                     @else
                     {{-- Default image if no image is available for the course --}}
                     <img class="img-fluid" src="{{ asset('img/default-course-image.jpg') }}" alt="Không có ảnh">
                     @endif
                     <div class="courses-text">
                         {{-- Course Name --}}
-                        <h4 class="text-center text-white px-3">{{ $khoaHoc->ten }}</h4>
+                        <h4 class="text-center text-white px-3">
+                            {{ $khoaHoc->ma ?? '' }}
+                            @php
+                            // Lấy trình độ đầu tiên từ các lớp
+                            $firstTrinhDo = $khoaHoc->lopHocs->first() ? $khoaHoc->lopHocs->first()->trinhdo : null;
+                            @endphp
+                            @if($firstTrinhDo)
+                            - {{ $firstTrinhDo->ten }}
+                            @endif
+                        </h4>
                         <div class="border-top w-100 mt-3">
                             <div class="d-flex justify-content-between p-4">
                                 {{-- Display instructor name from the first associated class (if any) --}}
@@ -55,7 +64,7 @@
             <div class="col-12">
                 <nav aria-label="Page navigation">
                     <ul class="pagination pagination-lg justify-content-center mb-0">
-                        {{ $khoahocss->links('pagination::bootstrap-4') }} {{-- Use Laravel's built-in pagination links --}}
+                        {{ $khoahocsss->links('pagination::bootstrap-4') }} {{-- Use Laravel's built-in pagination links --}}
                     </ul>
                 </nav>
             </div>
@@ -149,7 +158,7 @@
                                     <option value="">Chọn khóa học bạn quan tâm *</option>
                                     {{-- Vòng lặp để hiển thị các khóa học từ database --}}
                                     @foreach($courses as $khoaHoc)
-                                    <option value="{{ $khoaHoc->id }}">{{ $khoaHoc->ten }}</option>
+                                    <option value="{{ $khoaHoc->id }}">{{ $khoaHoc->ma }}</option>
                                     @endforeach
                                 </select>
                                 @error('khoahoc_id')

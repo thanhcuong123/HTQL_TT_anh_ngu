@@ -23,8 +23,12 @@ class TinTuc extends Model
         'trang_thai',
     ];
 
-    public function tacGia()
+    public function tacgia()
     {
         return $this->belongsTo(User::class, 'tacgia_id');
+    }
+    public function nhanvien()
+    {
+        return $this->hasOneThrough(NhanVien::class, User::class, 'id', 'user_id', 'tacgia_id', 'id');
     }
 }

@@ -30,7 +30,8 @@ class CalendarController extends Controller
                 'phonghoc',
                 'thu',
                 'cahoc',
-                'kynang'
+                'kynang',
+                'phonghoc.tang.nhahoc',
             ])
                 ->whereHas('lophoc', function ($query) use ($start, $end) {
                     $query->where('ngaybatdau', '<=', $end)
@@ -52,6 +53,10 @@ class CalendarController extends Controller
                 $thu = $item->thu;
                 $cahoc = $item->cahoc;
                 $kynang = $item->kynang;
+                $tang = $phonghoc->tang ?? null;
+                $nhahoc = $tang ? $tang->nhahoc : null;
+                $nhahocTen = $nhahoc ? $nhahoc->ma : 'N/A';
+
 
                 // Lấy số thứ tự ngày trong tuần của Carbon từ ánh xạ ID của Thứ
                 $targetDayOfWeek = $thuMap[$thu->id] ?? null;
@@ -91,6 +96,7 @@ class CalendarController extends Controller
                                 'skill' => $kynang->ten ?? 'N/A',
                                 'caHoc' => $cahoc->tenca,
                                 'thu' => $thu->tenthu,
+                                'nhaHoc' => $nhahocTen
                             ],
                             'classNames' => [
                                 'event-default' // Class mặc định nếu không có logic màu cụ thể

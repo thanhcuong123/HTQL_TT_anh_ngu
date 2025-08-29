@@ -11,7 +11,12 @@
                 <div class="mb-5">
                     <div class="section-title position-relative mb-5">
                         <h6 class="d-inline-block position-relative text-secondary text-uppercase pb-2">Chi tiết khóa học</h6>
-                        <h1 class="display-4">{{ $khoaHoc->ten }}</h1>
+                        <h1 class="display-4">
+                            {{ $khoaHoc->ten }}
+                            -
+                            {{ $khoaHoc->lophocs->pluck('trinhDo.ten')->filter()->unique()->implode(', ') }}
+                        </h1>
+
                     </div>
                     @if ($khoaHoc->hinhanh)
                     <img class="img-fluid rounded w-100 mb-4" src="{{ asset('storage/' . $khoaHoc->hinhanh) }}" alt="{{ $khoaHoc->tenkhoahoc }}">
@@ -62,7 +67,9 @@
                         <h6 class="text-white my-3">Kỹ năng</h6>
                         <h6 class="text-white my-3">
                             @php
-                            $kyNangNames = $trinhDos->pluck('kyNang.ten')->filter()->unique()->implode(', ');
+                            $kyNangNames = $trinhDos->flatMap(function ($trinhDo) {
+                            return $trinhDo->kyNangs->pluck('ten');
+                            })->filter()->unique()->implode(', ');
                             @endphp
                             {{ $kyNangNames ?: 'Đang cập nhật' }}
                         </h6>
@@ -77,43 +84,31 @@
                         <h6 class="text-white my-3">Đang cập nhật</h6>
                     </div>
                     @endif
-                    <div class="d-flex justify-content-between border-bottom px-4">
-                        <h6 class="text-white my-3">Mức độ</h6>
-                        <h6 class="text-white my-3">{{ $khoaHoc->muc_do_kho ?? 'N/A' }}</h6>
-                    </div>
+
                     <div class="d-flex justify-content-between px-4">
                         <h6 class="text-white my-3">Ngôn ngữ</h6>
                         <h6 class="text-white my-3">Tiếng Anh</h6>
+                    </div>
+
+                    <!-- hocphi -->
+                    @php
+                    $hocPhi = $hocPhiTheoTrinhDo[$trinhDo->id] ?? null;
+                    @endphp
+
+                    <div class="d-flex justify-content-between border-bottom px-4">
+                        <h6 class="text-white my-3">Học phí</h6>
+                        <h6 class="text-white my-3">
+                            @if(is_numeric($hocPhi))
+                            {{ number_format($hocPhi, 0, ',', '.') }} VNĐ
+                            @else
+                            Chưa cập nhật
+                            @endif
+                        </h6>
                     </div>
                     <div class="py-3 px-4">
                         <a class="btn btn-block btn-secondary py-3 px-5" href="#form-tu-van">Đăng ký nhận tư vấn ngay</a>
                     </div>
                 </div>
-                <!-- <div class="mb-5">
-                    <h2 class="mb-3">Danh mục</h2>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <a href="" class="text-decoration-none h6 m-0">Thiết kế Web</a>
-                            <span class="badge badge-primary badge-pill">150</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <a href="" class="text-decoration-none h6 m-0">Phát triển Web</a>
-                            <span class="badge badge-primary badge-pill">131</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <a href="" class="text-decoration-none h6 m-0">Tiếp thị trực tuyến</a>
-                            <span class="badge badge-primary badge-pill">78</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <a href="" class="text-decoration-none h6 m-0">Nghiên cứu từ khóa</a>
-                            <span class="badge badge-primary badge-pill">56</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <a href="" class="text-decoration-none h6 m-0">Tiếp thị qua Email</a>
-                            <span class="badge badge-primary badge-pill">98</span>
-                        </li>
-                    </ul>
-                </div> -->
 
                 <div class="mb-5">
                     <h2 class="mb-3">Danh mục </h2>
@@ -122,7 +117,14 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                             {{-- Liên kết đến trang danh sách lớp học đã lọc theo khóa học này --}}
                             <a href="{{ route('courses_detail', $khoaHocs->id)  }}" class="text-decoration-none h6 m-0 category-link">
-                                {{ $khoaHocs->ten }}
+                                {{ $khoaHocs->ma ?? '' }}
+                                @php
+                                // Lấy trình độ đầu tiên từ các lớp
+                                $firstTrinhDo = $khoaHocs->lopHocs->first() ? $khoaHocs->lopHocs->first()->trinhdo : null;
+                                @endphp
+                                @if($firstTrinhDo)
+                                - {{ $firstTrinhDo->ten }}
+                                @endif
                             </a>
                             {{-- Hiển thị số lượng lớp học (nếu bạn dùng withCount trong Controller) --}}
                             <span class="badge badge-primary badge-pill">{{ $khoaHocs->lophocs_count ?? 0 }}</span>
@@ -270,7 +272,7 @@
                                     <option value="">Chọn khóa học bạn quan tâm *</option>
                                     {{-- Vòng lặp để hiển thị các khóa học từ database --}}
                                     @foreach($courses as $khoaHoc)
-                                    <option value="{{ $khoaHoc->id }}">{{ $khoaHoc->ten }}</option>
+                                    <option value="{{ $khoaHoc->id }}">{{ $khoaHoc->ma }}</option>
                                     @endforeach
                                 </select>
                                 @error('khoahoc_id')

@@ -87,17 +87,19 @@
             <h1 class="text-white mt-4 mb-4">Bạn đang tìm khóa học nào của chúng tôi? </h1>
             <div class="mx-auto mb-5" style="width: 100%; max-width: 900px;">
                 <form action="{{route('search') }}" method="GET" class="input-group">
-                    <div class="input-group-prepend">
+                    <!-- <div class="input-group-prepend">
                         {{-- Select box cho Khóa học --}}
                         <select class="btn btn-outline-light bg-white text-body px-4" name="khoahoc_id">
-                            <option value="">Tất cả khóa học</option> {{-- Option để chọn tất cả --}}
+                            <option value="">Tất cả khóa học</option>
                             @foreach ($khoahocss as $khoaHoc)
-                            <option value="{{ $khoaHoc->id }}" {{ request('khoahoc_id') == $khoaHoc->id ? 'selected' : '' }}>
-                                {{ $khoaHoc->ten }}
+                            <option value="{{ $khoaHoc->khoahoc_id }}">
+                                Khóa {{ $khoaHoc->khoahoc_ten }} - Trình độ {{ $khoaHoc->trinhdo_ten }}
                             </option>
                             @endforeach
+
                         </select>
-                    </div>
+
+                    </div> -->
 
                     {{-- Input tìm kiếm theo từ khóa --}}
                     <input type="text" class="form-control border-light" style="padding: 30px 25px;" placeholder="Tìm kiếm theo từ khóa..." name="keyword" id="searchKeyword" value="{{ request('keyword') }}"> <button class="btn btn-outline-secondary" type="button" id="voiceSearchBtn">

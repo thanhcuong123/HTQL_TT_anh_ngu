@@ -3,98 +3,151 @@
 namespace App\Http\Controllers\Users;
 
 use App\Http\Controllers\Controller;
+use App\Models\HocVien;
 use App\Models\KhoaHoc;
 use App\Models\LopHoc;
 use App\Models\NamHoc;
 use App\Models\TrinhDo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CoursesController extends Controller
 {
     public function index()
     {
-        // Lấy tất cả các khóa học từ database
-        // Bạn có thể thêm điều kiện lọc, sắp xếp, hoặc phân trang nếu cần
-        $khoahocss = KhoaHoc::all();
+        // Lấy danh sách khóa học kèm đầy đủ quan hệ
 
-        // Nếu bạn có mối quan hệ với giáo viên (ví dụ: một khóa học có một giáo viên),
-        // bạn có thể eager load để tránh N+1 query problem
-        // $courses = Course::with('teacher')->get();
+        $trinhdos = TrinhDo::all();
+        $totalClasses = LopHoc::count();
+        $totalCourses = KhoaHoc::count();
+        $totalLevels  = TrinhDo::count();
+        $totalStudents = HocVien::count();
+        $khoahocss = KhoaHoc::with([
+            'lopHocs.trinhdo.dongias'
+        ])->get();
+        // Xác định năm học hiện tại
+        $currentYearString = '2024 - 2025';
+        $namHocHienTai = NamHoc::where('nam', $currentYearString)->first();
 
-        return view('users_layout', compact('khoahocss')); // Truyền biến $courses sang view
-        // Giả sử view của bạn là resources/views/frontend/index.blade.php
+        // Duyệt và gán học phí tạm vào mỗi KhoaHoc
+        foreach ($khoahocss as $khoaHoc) {
+            $trinhDos = $khoaHoc->lopHocs->pluck('trinhdo')->filter()->unique('id');
+            $hocPhi = null;
+
+            if ($namHocHienTai) {
+                foreach ($trinhDos as $trinhDo) {
+                    $donGia = $trinhDo->dongias->where('namhoc_id', $namHocHienTai->id)->first();
+                    if ($donGia && is_numeric($donGia->hocphi)) {
+                        $hocPhi = $donGia->hocphi;
+                        break; // chỉ cần 1 học phí đại diện
+                    }
+                }
+            }
+
+            // Thêm thuộc tính ảo để view dễ dùng
+            $khoaHoc->hoc_phi = $hocPhi;
+        }
+
+        return view('users_layout', compact(
+            'khoahocss',
+            'totalClasses',
+            'totalCourses',
+            'totalLevels',
+            'totalStudents',
+            'trinhdos'
+        ));
     }
+
+    public function dem()
+    {
+        $totalClasses = LopHoc::count();      // Bảng lop_hoc
+        $totalCourses = KhoaHoc::count();     // Bảng khoa_hoc
+        $totalLevels  = TrinhDo::count();     // Bảng trinh_do
+        $totalStudents = HocVien::count();    // Bảng hoc_vien
+
+        return view('pages.content', compact(
+            'totalClasses',
+            'totalCourses',
+            'totalLevels',
+            'totalStudents'
+        ));
+    }
+
 
     public function courses_detail($id)
     {
-        // Tìm khóa học theo ID và eager load các mối quan hệ cần thiết
-        // Eager load:
-        // - lophocs (để biết các lớp học thuộc khóa này)
-        // - lophocs.trinhDo (để lấy thông tin trình độ của mỗi lớp)
-        // - lophocs.trinhDo.kyNang (để lấy thông tin kỹ năng từ trình độ)
-        // - lophocs.giaoVien (để lấy thông tin giảng viên)
-        // KHÔNG eager load dongia qua trinhDo ở đây, vì chúng ta sẽ lấy riêng
-        $courses = KhoaHoc::all();
+        // Lấy khóa học + quan hệ cần thiết
         $khoaHoc = KhoaHoc::with([
-            'lophocs.giaoVien',
-            'lophocs.trinhDo.kyNang',
+            'lopHocs.trinhDo.dongias',
+            'lopHocs.giaoVien',
+            'lopHocs.trinhDo.kyNangs',
+            'namHoc' // Lấy luôn năm học của KH
+        ])->findOrFail($id);
 
-        ])->find($id);
+        $trinhDos = $khoaHoc->lopHocs->pluck('trinhDo')->filter()->unique('id');
 
-        if (!$khoaHoc) {
-            return redirect()->route('home')->with('error', 'Khóa học không tồn tại.');
-        }
-
-        // Lấy danh sách các trình độ duy nhất liên quan đến khóa học này
-        // (chỉ những trình độ mà khóa học này thực sự cung cấp thông qua các lớp học của nó)
-        $trinhDos = $khoaHoc->lophocs->pluck('trinhDo')->filter()->unique('id');
-        $khoaHocs = KhoaHoc::withCount('lophocs')->get();
-        // Lấy học phí cho từng trình độ trong năm học hiện tại
         $hocPhiTheoTrinhDo = [];
-        $currentYearString = '2024 - 2025'; // Hoặc lấy từ cấu hình, biến toàn cục, hoặc năm hiện tại
-        $namHocHienTai = NamHoc::where('nam', $currentYearString)->first();
-        $khoahocss = KhoaHoc::all();
-        if ($namHocHienTai) {
-            foreach ($trinhDos as $trinhDo) {
-                // Tìm đơn giá cho trình độ này trong năm học hiện tại
-                // Lấy từ mối quan hệ donGias của TrinhDo
-                $donGia = $trinhDo->dongia()->where('namhoc_id', $namHocHienTai->id)->first();
 
-                if ($donGia) {
-                    $hocPhiTheoTrinhDo[$trinhDo->id] = $donGia->muc_gia; // Sử dụng muc_gia
-                } else {
-                    $hocPhiTheoTrinhDo[$trinhDo->id] = 'Chưa cập nhật';
-                }
+        if ($khoaHoc->namHoc) {
+            foreach ($trinhDos as $trinhDo) {
+                $dongia = $trinhDo->dongias
+                    ->where('namhoc_id', $khoaHoc->namhoc_id) // lấy đúng năm học của KH
+                    ->first();
+
+                $hocPhiTheoTrinhDo[$trinhDo->id] = $dongia ? $dongia->hocphi : null;
             }
         } else {
-            // Nếu không tìm thấy năm học hiện tại, tất cả các trình độ sẽ không có giá
             foreach ($trinhDos as $trinhDo) {
-                $hocPhiTheoTrinhDo[$trinhDo->id] = 'Không tìm thấy năm học';
+                $hocPhiTheoTrinhDo[$trinhDo->id] = null; // KH chưa có năm học thì ko có giá
             }
         }
 
-        // Lấy thông tin giảng viên cho khóa học chính (lấy từ lớp học đầu tiên nếu có)
-        $firstLopHoc = $khoaHoc->lophocs->first();
+        $firstLopHoc = $khoaHoc->lopHocs->first();
         $giangVienTen = $firstLopHoc && $firstLopHoc->giaoVien ? $firstLopHoc->giaoVien->ten : 'Đang cập nhật';
 
-        // Lấy các khóa học liên quan (ví dụ: ngẫu nhiên 3 khóa học khác)
-        // Bạn có thể thêm logic phức tạp hơn ở đây (ví dụ: cùng danh mục)
-        $relatedCourses = KhoaHoc::where('id', '!=', $khoaHoc->id)
-            ->inRandomOrder()
-            ->limit(3)
+        $khoaHocs = KhoaHoc::withCount('lopHocs')->get();
+        $relatedCourses = KhoaHoc::where('id', '!=', $khoaHoc->id)->inRandomOrder()->limit(3)->get();
+        $courses = KhoaHoc::all();
+        $khoahocss = DB::table('khoahoc')
+            ->join('lophoc', 'khoahoc.id', '=', 'lophoc.khoahoc_id')
+            ->join('trinhdo', 'lophoc.trinhdo_id', '=', 'trinhdo.id')
+            ->select(
+                'khoahoc.id as khoahoc_id',
+                'khoahoc.ma  as khoahoc_ten',
+                'trinhdo.ten as trinhdo_ten'
+            )
+            ->distinct()
             ->get();
 
-        // Truyền dữ liệu khóa học, các khóa học liên quan, trình độ, học phí theo trình độ và tên giảng viên tới view
-        return view('pages.courses_detail', compact('khoaHoc', 'relatedCourses', 'khoahocss', 'trinhDos', 'hocPhiTheoTrinhDo', 'giangVienTen', 'khoaHocs', 'courses'));
+        return view('pages.courses_detail', compact(
+            'khoaHoc',
+            'relatedCourses',
+            'khoahocss',
+            'trinhDos',
+            'hocPhiTheoTrinhDo',
+            'giangVienTen',
+            'khoaHocs',
+            'courses'
+        ));
     }
+
 
     public function search(Request $request)
     {
         $keyword = $request->input('keyword');
         $khoahocId = $request->input('khoahoc_id');
-
+        $trinhdos = TrinhDo::all();
         // Always get all courses for the dropdown on the search form
-        $khoaHocsForDropdown = KhoaHoc::all();
+        $khoaHocsForDropdown =  DB::table('khoahoc')
+            ->join('lophoc', 'khoahoc.id', '=', 'lophoc.khoahoc_id')
+            ->join('trinhdo', 'lophoc.trinhdo_id', '=', 'trinhdo.id')
+            ->select(
+                'khoahoc.id as khoahoc_id',
+                'khoahoc.ma as khoahoc_ten',
+                'trinhdo.ten as trinhdo_ten'
+            )
+            ->distinct()
+            ->get();
 
         // Initialize variables for the view
         $selectedKhoaHoc = null;
@@ -102,9 +155,7 @@ class CoursesController extends Controller
         $lopHocResults = collect();
         $trinhDoResults = collect();
         $courses = Khoahoc::all();
-        // --- Priority Logic for Display ---
 
-        // Scenario 1: Only a specific course is selected from the dropdown (no keyword)
         if ($khoahocId && !$keyword) {
             $selectedKhoaHoc = KhoaHoc::with('lophocs.trinhDo')->find($khoahocId);
 
@@ -117,6 +168,7 @@ class CoursesController extends Controller
                     'khoaHocResults' => collect(),
                     'lopHocResults' => collect(),
                     'trinhDoResults' => collect(),
+                    'trinhdos'
                 ], compact('courses'));
             }
         }
@@ -214,6 +266,7 @@ class CoursesController extends Controller
             'khoahocss' => $khoaHocsForDropdown,
             'keyword_searched' => $keyword,
             'khoahoc_id_selected' => $khoahocId,
+            'trinhdos'
         ], compact('courses'));
     }
 }

@@ -14,6 +14,7 @@ class HocVi extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
+        'mahocvi',
         'tenhocvi',
         'mota',
     ];

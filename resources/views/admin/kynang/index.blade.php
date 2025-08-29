@@ -63,7 +63,7 @@
                         <td>{{ $kh->mota }}</td>
 
                         <td class="col-action">
-                            <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a>
+                            <!-- <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a> -->
                             <!-- <a href="javascript:void(0);"
                                 class="btn btn-sm btn-warning btn-sua-khoahoc"
                                 data-id="{{ $kh->ma }}"

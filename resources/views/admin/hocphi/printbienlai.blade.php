@@ -18,9 +18,9 @@
         }
 
         .receipt-container {
-            width: 210mm;
+            width: 250mm;
             /* Kích thước A4 ngang */
-            height: 148mm;
+            height: 170mm;
             /* Kích thước A5 ngang (hoặc một nửa A4 dọc) */
             margin: 20px auto;
             padding: 20px 30px;
@@ -32,6 +32,8 @@
             flex-direction: column;
             justify-content: space-between;
         }
+
+
 
         .header-section {
             display: flex;
@@ -125,6 +127,12 @@
             padding-top: 10px;
         }
 
+        .controls button {
+            padding: 8px 16px;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+
         .right-side-text {
             position: absolute;
             right: 10px;
@@ -136,92 +144,179 @@
             white-space: nowrap;
             color: #777;
         }
+
+        .btn-in {
+            background-color: blue;
+        }
+
+        @media print {
+            .print-controls {
+                display: none;
+
+            }
+
+            .receipt-container {
+                page-break-after: always;
+            }
+
+            .receipt-container:last-child {
+                page-break-after: auto;
+            }
+
+        }
+
+        .print-controls button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            /* Bo góc */
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            /* Hiệu ứng */
+        }
+
+        .print-controls button:first-child {
+            background-color: #007bff;
+            /* Màu xanh dương */
+            color: #fff;
+        }
+
+        .print-controls button:first-child:hover {
+            background-color: #0056b3;
+            /* Đậm hơn khi hover */
+            transform: translateY(-2px);
+        }
+
+        .print-controls button.btn-x2 {
+            background-color: #0056b3;
+            /* Màu xanh lá */
+            color: #fff;
+        }
+
+        .print-controls button.btn-x2:hover {
+            background-color: #007bff;
+            /* Đậm hơn khi hover */
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 
 <body>
-    <div class="receipt-container">
-        <!-- Header Section -->
-        <div class="header-section">
-            <div class="header-left">
-                <p style="font-weight: bold; margin-bottom: 2px;">TRUNG TÂM ANH NGỮ RIVER</p>
-                <p style="margin: 0;">Địa chỉ: Mậu Thân, Ninh Kiều, Cần Thơ</p>
-                <p style="margin: 0;">Website: www.anhnguriver.com</p>
-                <p style="margin: 0;">số điện thoại: 0702892014</p>
+    <div class="container">
+        <div class="receipt-container">
+            <!-- Header Section -->
+            <div class="header-section">
+                <div class="header-left">
+                    <p style="font-weight: bold; margin-bottom: 2px;">TRUNG TÂM ANH NGỮ RIVER</p>
+                    <p style="margin: 0;">Địa chỉ: Mậu Thân, Ninh Kiều, Cần Thơ</p>
+                    <p style="margin: 0;">Website: www.anhnguriver.com</p>
+                    <p style="margin: 0;">số điện thoại: 0702892014</p>
+                </div>
+                <div class="header-right">
+                    <p>Mẫu số: 01-05/BLP</p>
+                    <p>Ký hiệu: AA/2012P</p>
+                    <p>Số: <span class="info-value no-border">________________</span></p> <!-- Placeholder for receipt number -->
+                </div>
             </div>
-            <div class="header-right">
-                <p>Mẫu số: 01-05/BLP</p>
-                <p>Ký hiệu: AA/2012P</p>
-                <p>Số: <span class="info-value no-border">________________</span></p> <!-- Placeholder for receipt number -->
-            </div>
-        </div>
 
-        <!-- Main Title -->
-        <div class="title">BIÊN LAI THU HỌC PHÍ</div>
-        <div class="subtitle">Liên 1: Lưu</div>
+            <!-- Main Title -->
+            <div class="title">BIÊN LAI THU HỌC PHÍ</div>
+            <div class="subtitle">Liên 2: </div>
 
-        <!-- Information Section -->
-        <div class="info-section">
-            <div class="info-line">
-                <span class="info-label">Họ tên người nộp tiền:</span>
-                <span class="info-value">{{ $phieuThu->hocvien->ten ?? '________________________________________________' }}</span>
+            <!-- Information Section -->
+            <div class="info-section">
+                <div class="info-line">
+                    <span class="info-label">Họ tên người nộp tiền:</span>
+                    <span class="info-value">{{ $phieuThu->hocvien->ten ?? '________________________________________________' }}</span>
+                </div>
+                <div class="info-line">
+                    <span class="info-label">Địa chỉ:</span>
+                    <span class="info-value">{{ $phieuThu->hocvien->diachi ?? '________________________________________________' }}</span>
+                </div>
+                <div class="info-line">
+                    <span class="info-label">Lý do thu:</span>
+                    <span class="info-value">Thu học phí lớp {{ $phieuThu->lophoc->tenlophoc ?? '________________________________________________' }}</span>
+                </div>
+                <div class="info-line">
+                    <span class="info-label">Số tiền:</span>
+                    <span class="info-value">{{ number_format($phieuThu->sotien ?? 0, 0, ',', '.') }} VNĐ</span>
+                </div>
+                <div class="info-line">
+                    <span class="info-label">Hình thức thanh toán:</span>
+                    <span class="info-value">
+                        @if(isset($phieuThu->phuongthuc))
+                        {{ $phieuThu->phuongthuc== 'tien_mat' ? 'Tiền mặt' : 'Chuyển khoản' }}
+                        @else
+                        _____________
+                        @endif
+                    </span>
+                </div>
+                <div class="info-line">
+                    <span class="info-label">Ngày thu:</span>
+                    <span class="info-value">{{ $phieuThu ->ngaythanhtoan ?? '________________________________________________' }}</span>
+                </div>
+                <div class="info-line">
+                    <span class="info-label">Ghi chú:</span>
+                    <span class="info-value">{{ $phieuThu->ghichu ?? '________________________________________________' }}</span>
+                </div>
             </div>
-            <div class="info-line">
-                <span class="info-label">Địa chỉ:</span>
-                <span class="info-value">{{ $phieuThu->hocvien->diachi ?? '________________________________________________' }}</span>
-            </div>
-            <div class="info-line">
-                <span class="info-label">Lý do thu:</span>
-                <span class="info-value">Thu học phí lớp {{ $phieuThu->lophoc->tenlophoc ?? '________________________________________________' }}</span>
-            </div>
-            <div class="info-line">
-                <span class="info-label">Số tiền:</span>
-                <span class="info-value">{{ number_format($phieuThu->sotien ?? 0, 0, ',', '.') }} VNĐ</span>
-            </div>
-            <div class="info-line">
-                <span class="info-label">Hình thức thanh toán:</span>
-                <span class="info-value">
-                    @if(isset($phieuThu->phuongthuc))
-                    {{ $phieuThu->phuongthuc== 'tien_mat' ? 'Tiền mặt' : 'Chuyển khoản' }}
-                    @else
-                    _____________
-                    @endif
-                </span>
-            </div>
-            <div class="info-line">
-                <span class="info-label">Ngày thu:</span>
-                <span class="info-value">{{ $phieuThu ->ngaythanhtoan ?? '________________________________________________' }}</span>
-            </div>
-            <div class="info-line">
-                <span class="info-label">Ghi chú:</span>
-                <span class="info-value">{{ $phieuThu->ghichu ?? '________________________________________________' }}</span>
-            </div>
-        </div>
 
-        <!-- Date and Signature Section -->
-        <div class="date-signature">
-            <div class="date-signature-block">
-                <p class="date-text">
-                    Ngày {{ date('d', strtotime($phieuThu->ngaythanhtoan)) }}
-                    tháng {{ date('m', strtotime($phieuThu->ngaythanhtoan)) }}
-                    năm {{ date('Y', strtotime($phieuThu->ngaythanhtoan)) }}
-                </p>
-                <p class="signer-title" style="font-weight: bold; margin-bottom: 5px;">Người thu tiền</p>
-                <p class="signer-name">(Ký và ghi rõ họ tên)</p>
+            <!-- Date and Signature Section -->
+            <div class="date-signature">
+                <div class="date-signature-block">
+                    <p class="date-text">
+                        Ngày {{ date('d', strtotime($phieuThu->ngaythanhtoan)) }}
+                        tháng {{ date('m', strtotime($phieuThu->ngaythanhtoan)) }}
+                        năm {{ date('Y', strtotime($phieuThu->ngaythanhtoan)) }}
+                    </p>
+                    <p class="signer-title" style="font-weight: bold; margin-bottom: 5px;">Người thu tiền</p>
+                    <p class="signer-name">(Ký và ghi rõ họ tên)</p>
+                    <p style="margin-top: 60px;">{{ $phieuThu ->nhanvien->ten}}</p>
+                </div>
             </div>
-        </div>
 
-        <!-- Footer Notes -->
-        <div class="note-section">
-            <!-- <p>* Ghi chú: Đề nghị Sinh viên giữ biên lai cẩn thận và xuất trình khi nhà trường yêu cầu.</p>
+            <!-- Footer Notes -->
+            <div class="note-section">
+                <!-- <p>* Ghi chú: Đề nghị Sinh viên giữ biên lai cẩn thận và xuất trình khi nhà trường yêu cầu.</p>
             <p>Phát hành theo công văn số 10765/CT-AC ngày 13 tháng 12 năm 2011 của Cục Thuế TP. HCM</p> -->
-        </div>
+            </div>
 
-        <!-- Right Side Vertical Text (from image) -->
-        <!-- <div class="right-side-text">
+            <!-- Right Side Vertical Text (from image) -->
+            <!-- <div class="right-side-text">
             (Cấm sửa chữa, viết thêm, gạch xóa) * Mẫu in theo TT200/2014/TT-BTC * Hotline: 0918 001 788 * www.hoadonxuat.com * MST: 0310336281 * © Công ty TNHH BÌNH MINH PHÁT
         </div> -->
+
+        </div>
+
+        <div class="print-controls" style="margin: 20px; text-align: center;">
+
+            <!-- <button type="button" class="btn btn-primary" onclick="window.print()">In biên lai</button> -->
+            <button class="btn-x2" onclick="cloneReceipt()">X2</button>
+        </div>
     </div>
+    <script>
+        function cloneReceipt() {
+            const receipt = document.querySelector('.receipt-container');
+            const clone = receipt.cloneNode(true);
+
+            // Tìm phần tử chứa subtitle và thay đổi nội dung
+            const subtitle = clone.querySelector('.subtitle');
+            if (subtitle) {
+                subtitle.textContent = 'Liên 1:';
+            }
+
+            // Khoảng cách nhỏ (tuỳ chỉnh)
+            clone.style.marginTop = '30px';
+
+            document.body.appendChild(clone);
+        }
+    </script>
+
+
+
 </body>
 
 </html>

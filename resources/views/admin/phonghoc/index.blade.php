@@ -58,10 +58,10 @@
                         <td>{{ $td->tenphong }}</td>
                         <td>{{ $td->succhua }}</td>
                         <td>{{ $td->tang->ten ?? 'N/A' }}</td>
-                        <td>{{ $td->tang->nhahoc->ten ?? 'N/A' }}</td>
+                        <td>{{ $td->tang->nhahoc->ma ?? 'N/A' }}</td>
                         <td>{{ $td->tang->nhahoc->coso->tencoso ?? 'N/A' }}</td>
                         <td class="col-action">
-                            <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a>
+                            <!-- <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a> -->
                             <a href="javascript:void(0);" class="btn btn-sm btn-warning btn-sua-trinhdo"
                                 data-id="{{ $td->id }}"
                                 data-tenphong="{{ $td->tenphong }}"

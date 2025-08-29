@@ -1,4 +1,26 @@
 <header class="topbar" data-navbarbg="skin5">
+    <style>
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #ffffff;
+            /* hoặc màu bạn muốn */
+            text-decoration: none;
+        }
+
+        .logo-icon img {
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .logo-role {
+            font-family: 'Arial', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
     <nav class="navbar top-navbar navbar-expand-md navbar-dark">
         <div class="navbar-header" data-logobg="skin5">
             <!-- This is for the sidebar toggle which is visible on mobile only -->
@@ -27,7 +49,11 @@
 
                 <!-- </b> -->
                 <!--End Logo icon -->
-                Staff
+                <!-- Staff -->
+            </a>
+            <a class="navbar-brand" href="{{ route('student.dashboard') }}">
+                <img src="{{ asset('admin/luanvantemplate/assets/images/logo-icon.png') }}" alt="homepage" class="light-logo" style="margin-right:40px" />
+                <span class="logo-role"> {{ Auth::user()->role }}</span>
             </a>
             <!-- ============================================================== -->
             <!-- End Logo -->

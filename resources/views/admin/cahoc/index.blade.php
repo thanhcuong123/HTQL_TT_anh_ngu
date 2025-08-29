@@ -28,7 +28,7 @@
 
         <h3 class="card-title">Danh sách ca học</h3>
         <div class="toolbar mb-3 d-flex justify-content-between align-items-center">
-            <button type="button" class="btn btn-primary btn-trinhdo">Thêm mới</button>
+            <button type="button" class="btn btn-primary btn-trinhdo">+ Thêm mới</button>
 
             <form class="search-form" action="" method="GET" style="position: relative;">
                 <input type="search" id="search" name="tu_khoa" placeholder="Tìm kiếm" autocomplete="off" class="form-control" />
@@ -51,7 +51,7 @@
                     <tr>
                         <th>#</th>
                         <!-- <th>Mã ca học</th> -->
-                        <th>Tên ca</th>
+                        <th>Stt ca</th>
                         <th>Thời gian bắt đầu</th>
                         <th>Thời gian kết thúc</th>
                         <th>Ghi chú</th>
@@ -70,7 +70,7 @@
                         <td>{{ $td->ghichu }}</td>
 
                         <td class="col-action">
-                            <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a>
+                            <!-- <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a> -->
                             <a href="javascript:void(0);"
                                 class="btn btn-sm btn-warning btn-sua-trinhdo"
                                 data-id="{{ $td->id }}"

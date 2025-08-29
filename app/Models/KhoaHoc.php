@@ -20,6 +20,10 @@ class KhoaHoc extends Model
         'thoiluong',
         'sobuoi',
         'hinhanh',
+        'ngaybatdau',
+        'ngayketthuc',
+        'namhoc_id',
+        'solop',
 
     ];
 
@@ -33,5 +37,9 @@ class KhoaHoc extends Model
     public function TuVans()
     {
         return $this->hasMany(TuVan::class, 'khoahoc_id');
+    }
+    public function namhoc()
+    {
+        return $this->belongsTo(NamHoc::class);
     }
 }

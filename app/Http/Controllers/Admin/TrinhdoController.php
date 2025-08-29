@@ -29,7 +29,7 @@ class TrinhdoController extends Controller
         $perPage = $request->input('per_page', 5);
         // $query = TrinhDo::query();
         // $dstrinhdo = $query->paginate($perPage)->appends($request->all());
-        $dstrinhdo = TrinhDo::with('kynang', 'dongia.namhoc')->paginate($perPage)->appends($request->all());
+        $dstrinhdo = TrinhDo::with('kynangs', 'dongias.namhoc')->paginate($perPage)->appends($request->all());
         $lastCourse = TrinhDo::orderBy('ma', 'desc')->first();
         if ($lastCourse) {
             $lastNumber = (int) substr($lastCourse->ma, 2);
@@ -52,45 +52,75 @@ class TrinhdoController extends Controller
 
         return view('admin.trinhdo.search_results', compact('dstrinhdo'));
     }
+    // public function store(Request $request)
+    // {
+    //     $lastCourse = TrinhDo::orderBy('ma', 'desc')->first();
+
+    //     if ($lastCourse) {
+    //         $lastNumber = (int) substr($lastCourse->ma, 2);
+    //         $newNumber = $lastNumber + 1;
+    //     } else {
+    //         $newNumber = 1;
+    //     }
+
+    //     $newMa = 'TD' . str_pad($newNumber, 2, '0', STR_PAD_LEFT);
+
+    //     $request->validate([
+
+    //         'ten' => 'required|string|max:255',
+    //         'mota' => 'nullable|string',
+
+    //     ]);
+
+    //     $trinhDo = TrinhDo::create([
+    //         'ma' => $newMa,
+    //         'ten' => $request->ten,
+    //         'kynang_id' => $request->kynang_id,
+    //         'mota' => $request->mota,
+    //     ]);
+
+    //     // $hoc_phi_input = $request['hoc_phi'];
+    //     // $hoc_phi = preg_replace('/[^\d]/', '', $hoc_phi_input); // Loại bỏ ký tự không phải số
+    //     // $hoc_phi = (float)$hoc_phi; // Chuyển đổi thành số
+    //     // // Thêm học phí vào bảng học phí
+    //     // DonGia::create([
+    //     //     'trinhdo_id' => $trinhDo->id,
+    //     //     'namhoc_id' => $request->namhoc_id,
+    //     //     'hocphi' => $hoc_phi,
+    //     // ]);
+
+    //     return redirect()->route('trinhdo.index')->with('success', 'Thêm trình độ mới thành công!');
+    // }
+
+
+
     public function store(Request $request)
     {
+
         $lastCourse = TrinhDo::orderBy('ma', 'desc')->first();
 
-        if ($lastCourse) {
-            $lastNumber = (int) substr($lastCourse->ma, 2);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
+        $newNumber = $lastCourse ? (int)substr($lastCourse->ma, 2) + 1 : 1;
         $newMa = 'TD' . str_pad($newNumber, 2, '0', STR_PAD_LEFT);
 
         $request->validate([
-
             'ten' => 'required|string|max:255',
             'mota' => 'nullable|string',
-
+            'kynang_ids' => 'required|array', // bắt buộc mảng ID kỹ năng
+            'kynang_ids.*' => 'exists:kynang,id',
         ]);
 
         $trinhDo = TrinhDo::create([
             'ma' => $newMa,
             'ten' => $request->ten,
-            'kynang_id' => $request->kynang_id,
             'mota' => $request->mota,
         ]);
 
-        $hoc_phi_input = $request['hoc_phi'];
-        $hoc_phi = preg_replace('/[^\d]/', '', $hoc_phi_input); // Loại bỏ ký tự không phải số
-        $hoc_phi = (float)$hoc_phi; // Chuyển đổi thành số
-        // Thêm học phí vào bảng học phí
-        DonGia::create([
-            'trinhdo_id' => $trinhDo->id,
-            'namhoc_id' => $request->namhoc_id,
-            'hocphi' => $hoc_phi,
-        ]);
+        // Gắn kỹ năng qua bảng pivot
+        $trinhDo->kynangs()->attach($request->kynang_ids);
 
         return redirect()->route('trinhdo.index')->with('success', 'Thêm trình độ mới thành công!');
     }
+
     public function update(Request $request, $ma)
     {
         $khoahoc = TrinhDo::where('ma', $ma)->firstOrFail();

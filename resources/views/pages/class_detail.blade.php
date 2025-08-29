@@ -40,35 +40,49 @@
                     </div>
                     <div class="d-flex justify-content-between border-bottom px-4">
                         <h6 class="text-white my-3">Khóa học</h6>
-                        <h6 class="text-white my-3">{{ $lopHoc->khoaHoc->ten ?? 'N/A' }}</h6>
+                        <h6 class="text-white my-3">
+                            Khóa {{ $lopHoc->khoaHoc->ma ?? 'Đang cập nhật' }}
+                            -
+                            {{ $lopHoc->trinhDo->ten ?? 'Chưa có trình độ' }}
+                        </h6>
+
                     </div>
                     <div class="d-flex justify-content-between border-bottom px-4">
                         <h6 class="text-white my-3">Trình độ</h6>
-                        <h6 class="text-white my-3">{{ $lopHoc->trinhDo->ten ?? 'N/A' }}</h6>
+                        <h6 class="text-white my-3">{{ $lopHoc->trinhDo->ten ?? 'Đang cập nhật' }}</h6>
                     </div>
                     <div class="d-flex justify-content-between border-bottom px-4">
+                        <h6 class="text-white my-3"> Ngày khai giảng</h6>
+                        <h6 class="text-white my-3">{{ $lopHoc->ngaybatdau ?? 'Đang cập nhật' }}</h6>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom px-4">
+                        <h6 class="text-white my-3"> Ngày bế giảng</h6>
+                        <h6 class="text-white my-3">{{ $lopHoc->ngayketthuc ?? 'Đang cập nhật' }}</h6>
+                    </div>
+
+                    <!-- <div class="d-flex justify-content-between border-bottom px-4">
                         <h6 class="text-white my-3">Giáo viên</h6>
                         <h6 class="text-white my-3">
                             @if ($giaoViens->count() > 0)
                             {{ $giaoViens->pluck('ten')->implode(', ') }}
                             @else
-                            N/A
+                            Đang cập nhật
                             @endif
                         </h6>
-                    </div>
-                    <div class="d-flex justify-content-between border-bottom px-4">
+                    </div> -->
+                    <!-- <div class="d-flex justify-content-between border-bottom px-4">
                         <h6 class="text-white my-3">Phòng học</h6>
                         <h6 class="text-white my-3">
                             @if ($phongHocs->count() > 0)
                             {{ $phongHocs->pluck('tenphong')->implode(', ') }}
                             @else
-                            N/A
+                            Đang cập nhật
                             @endif
                         </h6>
-                    </div>
+                    </div> -->
                     <div class="d-flex justify-content-between border-bottom px-4">
                         <h6 class="text-white my-3">Sĩ số</h6>
-                        <h6 class="text-white my-3">{{ $lopHoc->soluonghocvienhientai ?? 0 }}/{{ $lopHoc->soluonghocvientoida ?? 'N/A' }}</h6>
+                        <h6 class="text-white my-3">{{ $lopHoc->soluonghocvienhientai ?? 0 }}/{{ $lopHoc->soluonghocvientoida ?? 'Đang cập nhật' }}</h6>
                     </div>
                     <!-- <div class="d-flex justify-content-between border-bottom px-4">
                         <h6 class="text-white my-3">Thời gian học</h6>
@@ -76,14 +90,22 @@
                             {{ \Carbon\Carbon::parse($lopHoc->ngaybatdau)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($lopHoc->ngayketthuc)->format('d/m/Y') }} ({{ $lopHoc->gio_hoc ?? 'N/A' }})
                         </h6>
                     </div> -->
-                    <div class="d-flex justify-content-between px-4">
+                    <!-- <div class="d-flex justify-content-between px-4">
                         <h6 class="text-white my-3">Lịch học</h6>
                         <h6 class="text-white my-3">{{ $lopHoc->lichoc ?? 'Đang cập nhật' }}</h6>
-                    </div>
+                    </div> -->
                     <div class="d-flex justify-content-between px-4">
                         <h6 class="text-white my-3">Trạng thái</h6>
-                        <h6 class="text-white my-3">{{ $lopHoc->trangthai ?? 'N/A' }}</h6>
+                        <h6 class="text-white my-3">{{ $lopHoc->trangthai ?? 'Đang cập nhật'}}</h6>
                     </div>
+                    <div class="d-flex justify-content-between px-4">
+                        <h6 class="text-white my-3">Học phí</h6>
+                        <h6 class="text-white my-3">
+                            {{ $hocPhi ? number_format($hocPhi, 0, ',', '.') . ' VNĐ' : 'Đang cập nhật' }}
+                        </h6>
+                    </div>
+
+
                     <div class="py-3 px-4">
                         <a class="btn btn-block btn-secondary py-3 px-5" href="#form-tu-van">Đăng ký lớp học này</a>
                     </div>
@@ -109,7 +131,7 @@
                                 {{ $otherLopHoc->tenlophoc }} ({{ $otherLopHoc->malophoc }})
                             </a>
                             {{-- Có thể thêm thông tin khác như sĩ số, trạng thái --}}
-                            <span class="badge badge-info badge-pill">{{ $otherLopHoc->soluonghocvienhientai ?? 0 }}/{{ $otherLopHoc->soluonghocvientoida ?? 'N/A' }}</span>
+                            <span class="badge badge-info badge-pill">{{ $otherLopHoc->soluonghocvienhientai ?? 0 }}/{{ $otherLopHoc->soluonghocvientoida ?? 'Đang cập nhật' }}</span>
                         </li>
                         @endforeach
                         @else
@@ -222,9 +244,20 @@
                                 <select class="form-control border-top-0 border-right-0 border-left-0 p-0" id="khoahoc_id" name="khoahoc_id" required>
                                     <option value="">Chọn khóa học bạn quan tâm *</option>
                                     {{-- Vòng lặp để hiển thị các khóa học từ database --}}
-                                    @foreach($courses as $khoaHoc)
-                                    <option value="{{ $khoaHoc->id }}">{{ $khoaHoc->ten }}</option>
+                                    <!-- @foreach($courses as $khoaHoc)
+                                    <option value="{{ $khoaHoc->id }}"> Khóa {{ $khoaHoc->ma }}- {{ $khoaHoc->trinhdo_ten }}</option>
+                                    @endforeach -->
+                                    <!-- @foreach ($khoahocss as $khoaHoc)
+                                    <option value="{{ $khoaHoc->khoahoc_id }}">
+                                        Khóa {{ $khoaHoc->khoahoc_ten }} - {{ $khoaHoc->trinhdo_ten }}
+                                    </option>
+                                    @endforeach -->
+                                    @foreach ($khoahocss as $khoaHoc)
+                                    <option value="{{ $khoaHoc->khoahoc_id }}-{{ $khoaHoc->trinhdo_id }}">
+                                        Khóa {{ $khoaHoc->khoahoc_ten }} - {{ $khoaHoc->trinhdo_ten }}
+                                    </option>
                                     @endforeach
+
                                 </select>
                                 @error('khoahoc_id')
                                 <span class="text-danger">{{ $message }}</span>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Users;
 use App\Http\Controllers\Controller;
 use App\Mail\TuVanXacNhan;
 use App\Models\KhoaHoc;
+use App\Models\TrinhDo;
 use App\Models\TuVan;
 use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\Request;
@@ -89,70 +90,133 @@ class TuVanController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validate dữ liệu đầu vào từ form
+        // 1. Validate cơ bản (chỉ cần cho trường khoahoc_id dạng chuỗi, không check exists vì giá trị là "x-y")
         $validatedData = $request->validate([
             'hoten'      => 'required|string|max:255',
             'email'      => 'required|email|max:255',
             'sdt'        => 'required|string|max:20',
             'dotuoi'     => 'nullable|integer|min:1|max:100',
-            'khoahoc_id' => 'required|exists:khoahoc,id',
-            'loinhan'   => 'nullable|string|max:1000',
+            'khoahoc_id' => 'required|string', // ở đây nhận "idKhoahoc-idTrinhdo"
+            'loinhan'    => 'nullable|string|max:1000',
         ], [
-            // ... (Các thông báo lỗi của bạn) ...
             'hoten.required'      => 'Vui lòng nhập họ và tên của bạn.',
-            'hoten.string'        => 'Họ và tên không hợp lệ.',
-            'hoten.max'           => 'Họ và tên không được vượt quá 255 ký tự.',
             'email.required'      => 'Vui lòng nhập địa chỉ email.',
-            'email.email'         => 'Địa chỉ email không đúng định dạng.',
-            'email.max'           => 'Email không được vượt quá 255 ký tự.',
             'sdt.required'        => 'Vui lòng nhập số điện thoại.',
-            'sdt.string'          => 'Số điện thoại không hợp lệ.',
-            'sdt.max'             => 'Số điện thoại không được vượt quá 20 ký tự.',
-            'dotuoi.integer'      => 'Độ tuổi phải là một số nguyên.',
-            'dotuoi.min'          => 'Độ tuổi phải lớn hơn hoặc bằng 1.',
-            'dotuoi.max'          => 'Độ tuổi không được vượt quá 100.',
             'khoahoc_id.required' => 'Vui lòng chọn khóa học bạn quan tâm.',
-            'khoahoc_id.exists'   => 'Khóa học được chọn không hợp lệ.',
-            'loinhan.string'     => 'Lời nhắn không hợp lệ.',
-            'loinhan.max'        => 'Lời nhắn không được vượt quá 1000 ký tự.',
         ]);
 
         try {
-            // Lấy thông tin khóa học để gửi vào email
-            $khoaHoc = KhoaHoc::find($validatedData['khoahoc_id']);
+            // 2. Tách khoahoc_id và trinhdo_id từ chuỗi "idKhoahoc-idTrinhdo"
+            [$khoaHocId, $trinhDoId] = explode('-', $validatedData['khoahoc_id']);
 
-            // 2. Tạo một bản ghi mới trong bảng yeu_cau_tu_van
+            // 3. Lấy thông tin khóa học & trình độ để gửi vào email
+            $khoaHoc = KhoaHoc::find($khoaHocId);
+            $trinhDo = TrinhDo::find($trinhDoId);
+
+            // 4. Tạo một bản ghi mới trong bảng tuvan
             $yeuCau = TuVan::create([
                 'hoten'      => $validatedData['hoten'],
-                'email'       => $validatedData['email'],
-                'sdt'         => $validatedData['sdt'],
+                'email'      => $validatedData['email'],
+                'sdt'        => $validatedData['sdt'],
                 'dotuoi'     => $validatedData['dotuoi'],
-                'khoahoc_id' => $validatedData['khoahoc_id'],
-                'loinhan'    => $validatedData['loinhan'],
+                'khoahoc_id' => $khoaHocId,
+                'trinhdo_id' => $trinhDoId,
+                'loinhan'    => $validatedData['loinhan'] ?? null,
                 'trangthai'  => 'đang chờ xử lý',
             ]);
 
-            // 3. Chuẩn bị dữ liệu để gửi email
+            // 5. Chuẩn bị dữ liệu để gửi email
             $emailData = [
-                'hoten'    => $yeuCau->hoten,
-                'email'     => $yeuCau->email,
-                'sdt'       => $yeuCau->sdt,
-                'dotuoi'   => $yeuCau->dotuoi,
-                'khoahoc'  => $khoaHoc ? $khoaHoc->ten : 'Không xác định', // Lấy tên khóa học
-                'loinhan'  => $yeuCau->loinhan,
+                'hoten'   => $yeuCau->hoten,
+                'email'   => $yeuCau->email,
+                'sdt'     => $yeuCau->sdt,
+                'dotuoi'  => $yeuCau->dotuoi,
+                'khoahoc' => $khoaHoc ? $khoaHoc->ma : 'Không xác định',
+                'trinhdo' => $trinhDo ? $trinhDo->ten : 'Không xác định',
+                'loinhan' => $yeuCau->loinhan,
             ];
 
-            // 4. Gửi email xác nhận đến học viên
-            Mail::to($yeuCau->email)->queue(new TuVanXacNhan($emailData)); // <-- Thay send() bằng queue()
+            // 6. Gửi email xác nhận đến học viên
+            Mail::to($yeuCau->email)->queue(new TuVanXacNhan($emailData));
 
-            // 5. Chuyển hướng người dùng trở lại với thông báo thành công
-            Session::flash('success', 'Yêu cầu tư vấn của bạn đã được gửi thành công! Chúng tôi đã gửi email xác nhận đến bạn và sẽ liên hệ lại bạn sớm nhất.');
+            // 7. Thông báo thành công
+            Session::flash('success', 'Yêu cầu tư vấn của bạn đã được gửi thành công! Chúng tôi đã gửi email xác nhận đến bạn.');
             return redirect()->back();
         } catch (\Exception $e) {
-            // Xử lý lỗi nếu có vấn đề khi lưu vào cơ sở dữ liệu hoặc gửi email
             Session::flash('error', 'Đã có lỗi xảy ra khi gửi yêu cầu tư vấn. Vui lòng thử lại sau.');
-            // \Log::error('Lỗi khi gửi yêu cầu tư vấn hoặc email: ' . $e->getMessage() . ' at line ' . $e->getLine() . ' in ' . $e->getFile());
+            // \Log::error('Lỗi khi gửi yêu cầu tư vấn: ' . $e->getMessage());
             return redirect()->back()->withInput();
         }
     }
+
+
+
+    // public function store(Request $request)
+    // {
+    //     // 1. Validate dữ liệu đầu vào từ form
+    //     $validatedData = $request->validate([
+    //         'hoten'      => 'required|string|max:255',
+    //         'email'      => 'required|email|max:255',
+    //         'sdt'        => 'required|string|max:20',
+    //         'dotuoi'     => 'nullable|integer|min:1|max:100',
+    //         'khoahoc_id' => 'required|exists:khoahoc,id',
+    //         'loinhan'   => 'nullable|string|max:1000',
+    //     ], [
+    //         // ... (Các thông báo lỗi của bạn) ...
+    //         'hoten.required'      => 'Vui lòng nhập họ và tên của bạn.',
+    //         'hoten.string'        => 'Họ và tên không hợp lệ.',
+    //         'hoten.max'           => 'Họ và tên không được vượt quá 255 ký tự.',
+    //         'email.required'      => 'Vui lòng nhập địa chỉ email.',
+    //         'email.email'         => 'Địa chỉ email không đúng định dạng.',
+    //         'email.max'           => 'Email không được vượt quá 255 ký tự.',
+    //         'sdt.required'        => 'Vui lòng nhập số điện thoại.',
+    //         'sdt.string'          => 'Số điện thoại không hợp lệ.',
+    //         'sdt.max'             => 'Số điện thoại không được vượt quá 20 ký tự.',
+    //         'dotuoi.integer'      => 'Độ tuổi phải là một số nguyên.',
+    //         'dotuoi.min'          => 'Độ tuổi phải lớn hơn hoặc bằng 1.',
+    //         'dotuoi.max'          => 'Độ tuổi không được vượt quá 100.',
+    //         'khoahoc_id.required' => 'Vui lòng chọn khóa học bạn quan tâm.',
+    //         'khoahoc_id.exists'   => 'Khóa học được chọn không hợp lệ.',
+    //         'loinhan.string'     => 'Lời nhắn không hợp lệ.',
+    //         'loinhan.max'        => 'Lời nhắn không được vượt quá 1000 ký tự.',
+    //     ]);
+
+    //     try {
+    //         // Lấy thông tin khóa học để gửi vào email
+    //         $khoaHoc = KhoaHoc::find($validatedData['khoahoc_id']);
+
+    //         // 2. Tạo một bản ghi mới trong bảng yeu_cau_tu_van
+    //         $yeuCau = TuVan::create([
+    //             'hoten'      => $validatedData['hoten'],
+    //             'email'       => $validatedData['email'],
+    //             'sdt'         => $validatedData['sdt'],
+    //             'dotuoi'     => $validatedData['dotuoi'],
+    //             'khoahoc_id' => $validatedData['khoahoc_id'],
+    //             'loinhan'    => $validatedData['loinhan'],
+    //             'trangthai'  => 'đang chờ xử lý',
+    //         ]);
+
+    //         // 3. Chuẩn bị dữ liệu để gửi email
+    //         $emailData = [
+    //             'hoten'    => $yeuCau->hoten,
+    //             'email'     => $yeuCau->email,
+    //             'sdt'       => $yeuCau->sdt,
+    //             'dotuoi'   => $yeuCau->dotuoi,
+    //             'khoahoc'  => $khoaHoc ? $khoaHoc->ma : 'Không xác định', // Lấy tên khóa học
+    //             'loinhan'  => $yeuCau->loinhan,
+    //         ];
+
+    //         // 4. Gửi email xác nhận đến học viên
+    //         Mail::to($yeuCau->email)->queue(new TuVanXacNhan($emailData)); // <-- Thay send() bằng queue()
+
+    //         // 5. Chuyển hướng người dùng trở lại với thông báo thành công
+    //         Session::flash('success', 'Yêu cầu tư vấn của bạn đã được gửi thành công! Chúng tôi đã gửi email xác nhận đến bạn và sẽ liên hệ lại bạn sớm nhất.');
+    //         return redirect()->back();
+    //     } catch (\Exception $e) {
+    //         // Xử lý lỗi nếu có vấn đề khi lưu vào cơ sở dữ liệu hoặc gửi email
+    //         Session::flash('error', 'Đã có lỗi xảy ra khi gửi yêu cầu tư vấn. Vui lòng thử lại sau.');
+    //         // \Log::error('Lỗi khi gửi yêu cầu tư vấn hoặc email: ' . $e->getMessage() . ' at line ' . $e->getLine() . ' in ' . $e->getFile());
+    //         return redirect()->back()->withInput();
+    //     }
+    // }
 }

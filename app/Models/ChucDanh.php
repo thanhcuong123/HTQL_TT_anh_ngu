@@ -11,6 +11,7 @@ class ChucDanh extends Model
     protected $table = 'chucdanh';
     protected $primarykey = 'id';
     protected $fillable = [
+        'ma',
         'ten',
         'mota'
     ];

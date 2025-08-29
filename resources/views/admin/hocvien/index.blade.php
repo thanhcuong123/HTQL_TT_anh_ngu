@@ -15,7 +15,20 @@
 
         </div>
         @endif
-
+        @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+        </div>
+        @endif
+        @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $err)
+                <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
 
 
         <h3 class="card-title">Danh sách học viên</h3>
@@ -51,6 +64,7 @@
                         <th>Ngày sinh</th>
                         <th>Giới tính</th>
                         <th>Ngày đăng kí</th>
+                        <th>Lớp học đã đăng kí</th>
                         <th>Trạng thái</th>
                         <th class="col-action">Hành động</th>
                     </tr>
@@ -59,14 +73,25 @@
                     @foreach($dshocvien as $kh)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $kh->mahocvien }}</td>
-                        <td>{{ $kh->ten }}</td>
-                        <td>{{ $kh->user->email}}</td>
-                        <td>{{ $kh->sdt }}</td>
-                        <td>{{ $kh->diachi }}</td>
-                        <td>{{ $kh->ngaysinh}}</td>
-                        <td>{{ $kh->gioitinh }}</td>
-                        <td>{{ $kh->ngaydangki }}</td>
+                        <td>{{ $kh->mahocvien ??'--'}}</td>
+                        <td>{{ $kh->ten ??'--'}}</td>
+                        <td>{{ $kh->email_hv??'--'}}</td>
+                        <td>{{ $kh->sdt??'--' }}</td>
+                        <td>{{ $kh->diachi??'--' }}</td>
+                        <td>{{ $kh->ngaysinh??'--'}}</td>
+                        <td>{{ $kh->gioitinh ??'--'}}</td>
+                        <td>{{ $kh->ngaydangki ??'--'}}</td>
+                        <td>
+                            @if ($kh->lophocs->count() > 0)
+                            @foreach ($kh->lophocs as $lh)
+                            <span>{{ $lh->tenlophoc }}</span>
+                            <br>
+                            @endforeach
+                            @else
+                            Chưa đăng ký
+                            @endif
+                        </td>
+                        <!-- data-email="{{ $kh->user->email ?? '' }}" -->
                         <td>{{ $kh->trangthai }}</td>
                         <td class="col-action">
                             <!-- <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a> -->
@@ -75,7 +100,7 @@
                                 data-id="{{ $kh->id }}"
                                 data-ma="{{ $kh->mahocvien }}"
                                 data-ten="{{ $kh->ten }}"
-                                data-email="{{ $kh->user->email ?? '' }}"
+                                data-email="{{ $kh->email_hv ?? '' }}"
                                 data-sdt="{{ $kh->sdt }}"
                                 data-diachi="{{ $kh->diachi }}"
                                 data-ngaysinh="{{ $kh->ngaysinh }}"
@@ -84,7 +109,11 @@
                                 data-trangthai="{{ $kh->trangthai }}">
                                 Sửa
                             </a>
-
+                            <!-- <button type="button"
+                                class="btn btn-sm btn-success btn-tao-taikhoan"
+                                data-id="{{ $kh->id }}"
+                                data-mahocvien="{{ $kh->mahocvien }}"
+                                data-tenhocvien="{{ $kh->ten }}">Tạo tài khoản</button> -->
                             <form action="{{ route('hocvien.destroy',$kh->id)}}" method="POST" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa?')">
                                 @csrf
                                 @method('DELETE')
@@ -101,6 +130,38 @@
             </div>
         </div>
     </div>
+    <!-- Modal Tạo Tài Khoản -->
+    <div class="modal fade" id="modalTaoTaiKhoan" tabindex="-1" aria-labelledby="modalTaoTaiKhoanLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="" method="POST" id="form-tao-taikhoan">
+                @csrf
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTaoTaiKhoanLabel">Tạo tài khoản cho học viên</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="hocvien_id" id="taikhoan_hocvien_id">
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email:</label>
+                            <input type="email" class="form-control" name="email" id="taikhoan_email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu:</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
 
 
@@ -111,6 +172,18 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    // Xử lý nút Tạo tài khoản
+    $('.btn-tao-taikhoan').on('click', function() {
+        let id = $(this).data('id');
+        let mahocvien = $(this).data('mahocvien');
+        let tenhocvien = $(this).data('tenhocvien');
+
+        $('#taikhoan_hocvien_id').val(id);
+        $('#taikhoan_email').val(''); // reset nếu cần
+
+        $('#modalTaoTaiKhoan').modal('show');
+    });
+
     $(document).ready(function() {
         // Tìm kiếm theo ajax
         $("#search").on("keyup", function() {

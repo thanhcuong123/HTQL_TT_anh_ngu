@@ -1,4 +1,26 @@
 <header class="topbar" data-navbarbg="skin5">
+    <style>
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #ffffff;
+            /* hoặc màu bạn muốn */
+            text-decoration: none;
+        }
+
+        .logo-icon img {
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .logo-role {
+            font-family: 'Arial', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
     <nav class="navbar top-navbar navbar-expand-md navbar-dark">
         <div class="navbar-header" data-logobg="skin5">
             <!-- This is for the sidebar toggle which is visible on mobile only -->
@@ -9,25 +31,32 @@
             <a class="navbar-brand" href="index.html">
                 <!-- Logo icon -->
                 <!-- <b class="logo-icon p-l-10">
-                  
+
                     <img src="{{ asset('admin/luanvantemplate/assets/images/logo-icon.png') }}" alt="homepage" class="light-logo" />
 
                 </b>
-              
+
                 <span class="logo-text">
-                 
+
                     <img src="{{ asset('admin/luanvantemplate/assets/images/logo-text.png') }}" alt="homepage" class="light-logo" />
 
                 </span> -->
+
+
+
                 <!-- Logo icon -->
                 <!-- <b class="logo-icon"> -->
                 <!--You can put here icon as well // <i class="wi wi-sunset"></i> //-->
                 <!-- Dark Logo icon -->
-                <!-- <img src="assets/images/logo-text.png" alt="homepage" class="light-logo" /> -->
+                <!-- <img src="{{ asset('admin/luanvantemplate/assets/images/logo-text.png') }}" alt="homepage" class="light-logo" /> -->
 
                 <!-- </b> -->
                 <!--End Logo icon -->
-                Quản lý
+                <!-- Quản lý -->
+            </a>
+            <a class="navbar-brand" href="{{ route('dashboard') }}">
+                <img src="{{ asset('admin/luanvantemplate/assets/images/logo-icon.png') }}" alt="homepage" class="light-logo" style="margin-right:40px" />
+                <span class="logo-role"> {{ Auth::user()->role }}</span>
             </a>
             <!-- ============================================================== -->
             <!-- End Logo -->

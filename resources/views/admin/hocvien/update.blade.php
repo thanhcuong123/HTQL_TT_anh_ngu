@@ -20,7 +20,7 @@
                  <input type="text" class="form-control" id="edit_ten_hoc_vien" name="ten" reqired>
              </div>
              <div class="form-group mb-3">
-                 <label for="edit_email_user">Email (liên kết tài khoản người dùng):</label>
+                 <label for="edit_email_user">Email :</label>
                  <input type="email" class="form-control" id="edit_email_user" name="email">
              </div>
              <div class="form-group mb-3">

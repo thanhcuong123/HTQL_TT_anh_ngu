@@ -352,89 +352,147 @@
 
     <div class="section" id="sectionLopHoc">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5></h5>
+            <h5>Chi tiết Lớp Học</h5>
         </div>
-        <form action="{{ route('lophocdetail.update',$lophoc->id) }}" method="POST">
+
+        <form action="{{ route('lophocdetail.update', $lophoc->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
-            <div class="mb-3">
-                <label for="malophoc" class="form-label"><strong>Mã lớp học:</strong></label>
-                <input type="text" id="malophoc" name="malophoc" class="form-control" value="{{ $lophoc->malophoc }}" readonly>
+            <div class="row">
+                {{-- BÊN TRÁI --}}
+                <div class="col-md-6">
+                    {{-- Mã lớp học --}}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Mã lớp học:</strong></label>
+                        <input type="text" class="form-control" value="{{ $lophoc->malophoc }}" readonly>
+                    </div>
+
+                    {{-- Khóa học --}}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Khóa học:</strong></label>
+                        <input type="text" class="form-control" value="{{ $lophoc->khoahoc->ma ?? '' }}" readonly>
+                    </div>
+
+                    {{-- Trình độ --}}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Trình độ:</strong></label>
+                        <input type="text" class="form-control" value="{{ $lophoc->trinhdo->ten ?? '' }}" readonly>
+                    </div>
+
+                    {{-- Kỹ năng --}}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Kỹ năng:</strong></label>
+                        <input type="text"
+                            class="form-control"
+                            value="{{ $lophoc->trinhdo->kynangs->pluck('ten')->join(', ') }}"
+                            readonly>
+
+
+                    </div>
+
+                    {{-- Ngày bắt đầu --}}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Ngày bắt đầu:</strong></label>
+                        <input type="date" class="form-control" value="{{ $lophoc->ngaybatdau }}" readonly>
+                    </div>
+
+                    {{-- Ngày kết thúc --}}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Ngày kết thúc:</strong></label>
+                        <input type="date" class="form-control" value="{{ $lophoc->ngayketthuc }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="soluonghocvientoida" class="form-label"><strong>Số lượng HV tối đa:</strong></label>
+                        <input type="number" name="soluonghocvientoida" class="form-control" value="{{ $lophoc->soluonghocvientoida }}">
+                    </div>
+
+                    {{-- Số lượng học viên hiện tại --}}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Số lượng HV hiện tại:</strong></label>
+                        <input type="number" class="form-control" value="{{ $lophoc->soluonghocvienhientai }}" readonly>
+                    </div>
+                </div>
+
+                {{-- BÊN PHẢI --}}
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Hình ảnh lớp học:</strong></label>
+                        @if ($lophoc->hinhanh)
+                        <div class="mb-2">
+                            <img src="{{ asset('storage/' . $lophoc->hinhanh) }}" alt="Hình ảnh lớp học"
+                                style="max-width: 200px; height: auto; display: block;">
+                        </div>
+                        @else
+                        <p><em>Không có hình ảnh.</em></p>
+                        @endif
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Chọn hình ảnh:</strong></label>
+
+                        <input type="file" name="hinhanh" class="form-control">
+
+
+                    </div>
+
+
+                    {{-- Số lượng học viên tối đa --}}
+
+
+                    {{-- Trạng thái --}}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Trạng thái:</strong></label>
+                        <select name="trangthai" class="form-select" required style="width: 73%">
+                            <option value="dang_hoat_dong" {{ $lophoc->trangthai == 'dang_hoat_dong' ? 'selected' : '' }}>Đang hoạt động</option>
+                            <option value="da_huy" {{ $lophoc->trangthai == 'da_huy' ? 'selected' : '' }}>Đã đóng</option>
+                            <option value="sap_khai_giang" {{ $lophoc->trangthai == 'sap_khai_giang' ? 'selected' : '' }}>Sắp khai giảng</option>
+                            <option value="da_ket_thuc" {{ $lophoc->trangthai == 'da_ket_thuc' ? 'selected' : '' }}>Đã kết thúc</option>
+                        </select>
+                    </div>
+
+                    {{-- Lịch học --}}
+                    <!-- <div class="mb-3">
+                        <label for="lichoc" class="form-label"><strong>Lịch học:</strong></label>
+                        <input type="text" name="lichoc" class="form-control" value="{{ $lophoc->lichoc }}">
+                    </div> -->
+                    <!-- <div class="mb-3">
+                        <label for="mota" class="form-label"><strong>Số buổi:</strong></label>
+
+                        <input type="text" name="lichoc" class="form-control" value="{{ $lophoc->khoahoc->sobuoi }}" readonly>
+                    </div> -->
+                    {{-- Khóa học --}}
+                    <!-- <div class="mb-3">
+                        <label class="form-label"><strong>Học phí:</strong></label>
+                        <input type="text" class="form-control" value="{{ $lophoc->khoahoc->ma ?? '' }}" readonly>
+                        <p><strong>Học phí:</strong> {{ $hocphi ? number_format($hocphi, 0, ',', '.') . ' VNĐ' : 'Chưa có' }}</p>
+
+                    </div> -->
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Học phí:</strong></label>
+                        <input type="text"
+                            class="form-control"
+                            value="{{ $hocphi ? number_format($hocphi, 0, ',', '.') . ' VNĐ' : 'Chưa có' }}"
+                            readonly>
+                    </div>
+
+                    {{-- Mô tả --}}
+                    <div class="mb-3">
+                        <label for="mota" class="form-label"><strong>Mô tả:</strong></label>
+                        <textarea name="mota" class="form-control" rows="3">{{ $lophoc->mota }}</textarea>
+                    </div>
+
+                    {{-- Hình ảnh --}}
+
+                </div>
             </div>
 
-            {{-- Select cho Khóa học --}}
-            <div class="mb-3">
-                <label for="khoahoc_id" class="form-label"><strong>Tên khóa học:</strong></label>
-                <select id="khoahoc_id" name="khoahoc_id" class="form-select" required>
-                    <option value="">-- Chọn khóa học --</option>
-                    @foreach ($allKhoaHoc as $kh) {{-- Giả định bạn có biến $allKhoaHoc chứa tất cả khóa học --}}
-                    <option value="{{ $kh->id }}" {{ ($lophoc->khoahoc_id == $kh->id) ? 'selected' : '' }}>
-                        {{ $kh->ten }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Select cho Trình độ --}}
-            <div class="mb-3">
-                <label for="trinhdo_id" class="form-label"><strong>Trình độ:</strong></label>
-                <select id="trinhdo_id" name="trinhdo_id" class="form-select" required>
-                    <option value="">-- Chọn trình độ --</option>
-                    @foreach ($trinhdos as $td) {{-- Giả định bạn có biến $allTrinhDo chứa tất cả trình độ --}}
-                    <option value="{{ $td->id }}" {{ ($lophoc->trinhdo_id == $td->id) ? 'selected' : '' }}>
-                        {{ $td->ten }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Kỹ năng (giữ nguyên input nếu nó phụ thuộc vào trình độ hoặc không phải là lựa chọn trực tiếp) --}}
-            <div class="mb-3">
-                <label for="kynang" class="form-label"><strong>Kỹ năng:</strong></label>
-                <input type="text" id="kynang" name="kynang" class="form-control" value="{{ $lophoc->trinhdo->kynang->ten ?? '' }}" readonly>
-                {{-- Giữ readonly nếu kỹ năng được hiển thị tự động dựa trên trình độ --}}
-            </div>
-
-            <div class="mb-3">
-                <label for="ngaybatdau" class="form-label"><strong>Ngày bắt đầu:</strong></label>
-                <input type="date" id="ngaybatdau" name="ngaybatdau" class="form-control" value="{{ $lophoc->ngaybatdau }}">
-            </div>
-            <div class="mb-3">
-                <label for="ngayketthuc" class="form-label"><strong>Ngày kết thúc:</strong></label>
-                <input type="date" id="ngayketthuc" name="ngayketthuc" class="form-control" value="{{ $lophoc->ngayketthuc }}">
-            </div>
-            <div class="mb-3">
-                <label for="soluonghocvientoida" class="form-label"><strong>Số lượng học viên tối đa:</strong></label>
-                <input type="number" id="soluonghocvientoida" name="soluonghocvientoida" class="form-control" value="{{ $lophoc->soluonghocvientoida }}">
-            </div>
-            <div class="mb-3">
-                <label for="soluonghocvienhientai" class="form-label"><strong>Số lượng học viên hiện tại:</strong></label>
-                <input type="number" id="soluonghocvienhientai" name="soluonghocvienhientai" class="form-control" value="{{ $lophoc->soluonghocvienhientai }}" readonly>
-            </div>
-
-            {{-- Select cho Trạng thái --}}
-            <div class="mb-3">
-                <label for="trangthai" class="form-label"><strong>Trạng thái:</strong></label>
-                <select id="trangthai" name="trangthai" class="form-select" required>
-                    <option value="dang_hoat_dong" {{ ($lophoc->trangthai == 'dang_hoat_dong') ? 'selected' : '' }}>Đang hoạt động</option>
-                    <option value="da_huy" {{ ($lophoc->trangthai == 'da_huy') ? 'selected' : '' }}>Đã đóng</option>
-                    <option value="sap_khai_giang" {{ ($lophoc->trangthai == 'sap_khai_giang') ? 'selected' : '' }}>Sắp khai giảng</option>
-                    <option value="da_ket_thuc" {{ ($lophoc->trangthai == 'da_ket_thuc') ? 'selected' : '' }}>Đã kết thúc</option>
-                    {{-- Thêm các trạng thái khác nếu có --}}
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label for="lichoc" class="form-label"><strong>Ngày học:</strong></label>
-                <input type="text" id="lichoc" name="lichoc" class="form-control" value="{{ $lophoc->lichoc }}">
-            </div>
-
-            <div class="mt-4 text-center">
-                <button type="submit" class="btn btn-success" id="btncapnhatlophoc">Cập nhật lớp học</button>
+            {{-- Nút Submit --}}
+            <div class="mt-4 text-left">
+                <button type="submit" class="btn btn-primary">Cập nhật lớp học</button>
             </div>
         </form>
     </div>
+
 
     <div class="section" id="sectionGiaoVien">
         @if (!$giaovien)
@@ -489,7 +547,9 @@
     <div class="section" id="sectionHocVien">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5></h5>
-            <button class="btn btn-primary" id="btnShowAddHocVien">+ Thêm học viên</button>
+            <button class="btn btn-primary" id="btnShowAddHocVien" data-has-schedule="{{ $thoikhoabieu->isEmpty() ? 'false' : 'true' }}">
+                + Thêm học viên
+            </button>
         </div>
 
         @if ($hocvien->isEmpty())
@@ -511,7 +571,7 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $hv->ten }}</td>
-                    <td>{{ $hv->user->email }}</td>
+                    <td>{{ $hv->email_hv }}</td>
                     <td>{{ $hv->sdt }}</td>
                     <td class="col-action">
                         {{-- Nút Xóa Học viên --}}
@@ -597,7 +657,7 @@
                                 <td><input type="checkbox" name="hocvien_ids[]" value="{{ $hvdk->id }}"></td>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $hvdk->ten }}</td>
-                                <td>{{ $hvdk->user->email }}</td>
+                                <td>{{ $hvdk->email_hv }}</td>
                                 <td>{{ $hvdk->sdt }}</td>
                             </tr>
                             @endforeach
@@ -669,63 +729,100 @@
         <div class="custom-modal-content">
             <button class="close-btn" onclick="document.getElementById('addLichHocFormContainer').style.display='none'">&times;</button>
             <h5 class="mb-3">Thêm lịch học</h5>
-            <form id="lichHocForm" action="{{ route('lophoc.addlichhoc',[$lophoc ->id]) }}" method="POST">
+            <form id="lichHocForm" action="{{ route('lophoc.addlichhoc', [$lophoc->id]) }}" method="POST">
                 @csrf
+
+                <!-- Giáo viên -->
                 <div class="mb-3">
-                    <label for="giaovien_id" class="form-label">Giáo viên:</label>
+                    <label for="giaovien_id" class="form-label"> Chọn giáo viên để phân công:</label>
                     <select id="giaovien_id" name="giaovien_id" class="form-select" required>
                         <option value="">-- Chọn giáo viên --</option>
                         @foreach ($allgiaovien as $gv)
                         <option value="{{ $gv->id }}">{{ $gv->ten }}</option>
                         @endforeach
                     </select>
+                    <div id="giaovien-error" style="color: red; font-size: 0.9em;"></div>
                 </div>
+
+                <!-- Phòng học -->
                 <div class="mb-3">
-                    <label for="phonghoc_id" class="form-label">Phòng học:</label>
+                    <label for="phonghoc_id" class="form-label">Chọn phòng học:</label>
                     <select id="phonghoc_id" name="phonghoc_id" class="form-select" required>
                         <option value="">-- Chọn phòng học --</option>
                         @foreach ($allphonghoc as $ph)
-                        <option value="{{ $ph->id }}">{{ $ph->tenphong }}</option>
+                        <option value="{{ $ph->id }}" data-succhua="{{ $ph->succhua }}">
+                            Phòng {{ $ph->tenphong }} (Sức chứa: {{ $ph->succhua }})
+                        </option>
                         @endforeach
                     </select>
+                    <input type="hidden" id="lop_soluongtoida" value="{{ $lophoc->soluonghocvientoida }}">
                 </div>
+
+                <!-- Ca học + Thứ -->
                 <div class="mb-3">
-                    <label for="thu_id" class="form-label">Thứ:</label>
-                    <select id="thu_id" name="thu_id" class="form-select" required>
-                        <option value="">-- Chọn thứ --</option>
-                        @foreach ($allthu as $thu)
-                        <option value="{{ $thu->id }}">{{ $thu->tenthu }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="cahoc_id" class="form-label">Ca học:</label>
+                    <label for="cahoc_id" class="form-label">Chọn ca học:</label>
                     <select id="cahoc_id" name="cahoc_id" class="form-select" required>
                         <option value="">-- Chọn ca học --</option>
                         @foreach ($allcahoc as $ca)
-                        <option value="{{ $ca->id }}">{{ $ca->tenca }}</option>
+                        <option value="{{ $ca->id }}">
+                            Ca {{ $ca->tenca }} - ({{ \Carbon\Carbon::parse($ca->thoigianbatdau)->format('H:i') }} - {{ \Carbon\Carbon::parse($ca->thoigianketthuc)->format('H:i') }})
+                        </option>
                         @endforeach
                     </select>
                 </div>
+
+                <label>Ngày áp dụng :</label>
+                <div class="row">
+                    @foreach ($allthu as $thu)
+                    <div class="col-6">
+                        <label class="d-block">
+                            <input type="checkbox" name="thu_ids[]" value="{{ $thu->id }}">
+                            {{ $thu->tenthu }}
+                        </label>
+                    </div>
+                    @endforeach
+                </div>
+
+                <!-- Kỹ năng -->
                 <div class="mb-3">
-                    <label for="kynang_id" class="form-label">Kỹ năng:</label>
-                    <select id="kynang_id" name="kynang_id" class="form-select" required>
-                        <option value="">-- Chọn kỹ năng --</option>
-                        @foreach ($allkynang as $kn)
-                        <option value="{{ $kn->id }}">{{ $kn->ten }}</option>
-                        @endforeach
-                    </select>
+                    <label class="form-label">Kỹ năng:</label>
+                    @if ($lophoc->trinhdo && $lophoc->trinhdo->kynangs && $lophoc->trinhdo->kynangs->count())
+                    <div class="row">
+                        @php
+                        $kynangs = $lophoc->trinhdo->kynangs->values();
+                        $half = ceil($kynangs->count() / 2);
+                        @endphp
+
+                        <div class="col-md-6">
+                            @foreach ($kynangs->slice(0, $half) as $kn)
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="kynang_id[]" id="kynang_{{ $kn->id }}" value="{{ $kn->id }}">
+                                <label class="form-check-label" for="kynang_{{ $kn->id }}">{{ $kn->ten }}</label>
+                            </div>
+                            @endforeach
+                        </div>
+
+                        <div class="col-md-6">
+                            @foreach ($kynangs->slice($half) as $kn)
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="kynang_id[]" id="kynang_{{ $kn->id }}" value="{{ $kn->id }}">
+                                <label class="form-check-label" for="kynang_{{ $kn->id }}">{{ $kn->ten }}</label>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @else
+                    <div class="text-muted">Không có kỹ năng phù hợp</div>
+                    @endif
                 </div>
-                <!-- <div class="mb-3">
-                    <label for="ngayhoc" class="form-label">Ngày học:</label>
-                    <input type="date" id="ngayhoc" name="ngayhoc" class="form-control" required>
-                </div> -->
+
                 <div class="form-actions">
                     <button type="submit" class="btn btn-success">Lưu</button>
                 </div>
             </form>
         </div>
     </div>
+
 
 
 </div>
@@ -792,14 +889,28 @@
         //         formContainer.classList.remove('show');
         //     }
         // });
-        document.getElementById('btnShowAddHocVien').addEventListener('click', function() {
-            document.getElementById('addHocVienFormContainer').style.display = 'flex';
-            // Clear search input and reset table display when opening the modal
-            document.getElementById('hocVienSearchInput').value = '';
-            document.querySelectorAll('#hocVienTableBody tr').forEach(row => {
-                row.style.display = ''; // Show all rows
-            });
+        const btnShowAddHocVien = document.getElementById('btnShowAddHocVien');
+        const addHocVienFormContainer = document.getElementById('addHocVienFormContainer');
+        const hasSchedule = btnShowAddHocVien.getAttribute('data-has-schedule') === 'true';
+
+        btnShowAddHocVien.addEventListener('click', function() {
+            if (!hasSchedule) {
+                alert('Vui lòng thêm lịch học cho lớp này trước khi thêm học viên.');
+                // Optionally, switch to the "Lịch học" tab
+                document.getElementById('infoThoiKhoaBieu').click();
+            } else {
+                addHocVienFormContainer.style.display = 'flex';
+                document.getElementById('btnShowAddHocVien').addEventListener('click', function() {
+                    document.getElementById('addHocVienFormContainer').style.display = 'flex';
+                    // Clear search input and reset table display when opening the modal
+                    document.getElementById('hocVienSearchInput').value = '';
+                    document.querySelectorAll('#hocVienTableBody tr').forEach(row => {
+                        row.style.display = ''; // Show all rows
+                    });
+                });
+            }
         });
+
 
         document.getElementById('checkAll').addEventListener('change', function() {
             let checkboxes = document.querySelectorAll('input[name="hocvien_ids[]"]');
@@ -827,18 +938,40 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('btnShowAddLichHoc').addEventListener('click', function() {
-            document.getElementById('addLichHocFormContainer').style.display = 'flex';
+        const btnShow = document.getElementById('btnShowAddLichHoc');
+        const formContainer = document.getElementById('addLichHocFormContainer');
+        const closeBtn = document.querySelector('#addLichHocFormContainer .close-btn');
+        const lopToiDa = parseInt(document.getElementById('lop_soluongtoida').value || 0);
+
+        btnShow.addEventListener('click', function() {
+            const phonghocSelect = document.getElementById('phonghoc_id');
+            const options = phonghocSelect.querySelectorAll('option');
+
+            options.forEach(option => {
+                const succhua = parseInt(option.dataset.succhua || 0);
+                if (succhua && succhua < lopToiDa) {
+                    option.disabled = true;
+                    option.textContent = option.textContent.replace(' (Quá tải)', '') + ' (Quá tải)';
+                } else {
+                    option.disabled = false;
+                    option.textContent = option.textContent.replace(' (Quá tải)', '');
+                }
+            });
+
+            formContainer.style.display = 'flex';
         });
-        document.querySelector('#addLichHocFormContainer .close-btn').addEventListener('click', function() {
-            document.getElementById('addLichHocFormContainer').style.display = 'none';
+
+        closeBtn.addEventListener('click', function() {
+            formContainer.style.display = 'none';
         });
+
         window.addEventListener('click', function(event) {
-            if (event.target == document.getElementById('addLichHocFormContainer')) {
-                document.getElementById('addLichHocFormContainer').style.display = 'none';
+            if (event.target == formContainer) {
+                formContainer.style.display = 'none';
             }
         });
     });
+
     document.addEventListener('DOMContentLoaded', function() {
         // ... các mã JavaScript khác của bạn ...
 

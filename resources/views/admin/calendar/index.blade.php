@@ -25,6 +25,31 @@
         <div id='calendar'></div>
     </div>
 </div>
+<!-- Modal hiển thị chi tiết -->
+<div class="modal fade" id="eventDetailModal" tabindex="-1" aria-labelledby="eventDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventDetailModalLabel">Chi tiết lịch học </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Lớp:</strong> <span id="modal-class"></span></p>
+                <p><strong>Giáo viên:</strong> <span id="modal-teacher"></span></p>
+                <p><strong>Phòng:</strong> <span id="modal-room"></span></p>
+                <p><strong>Nhà học:</strong> <span id="modal-nhahoc"></span></p>
+                <p><strong>Kỹ năng:</strong> <span id="modal-skill"></span></p>
+                <p><strong>Ca học:</strong> <span id="modal-cahoc"></span></p>
+                <p><strong>Thứ:</strong> <span id="modal-thu"></span></p>
+            </div>
+            <div class="modal-footer">
+                <a id="modal-detail-link" href="#" class="btn btn-primary">Xem chi tiết</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -54,7 +79,8 @@
                     title: `
                         <strong>Lớp:</strong> ${info.event.extendedProps.classCode} - ${info.event.extendedProps.className}<br>
                         <strong>GV:</strong> ${info.event.extendedProps.teacher}<br>
-                        <strong>Phòng:</strong> ${info.event.extendedProps.room}<br>
+                        <strong>Phòng:</strong> ${info.event.extendedProps.room} 
+                        -${info.event.extendedProps.nhaHoc}<br>
                         <strong>Kỹ năng:</strong> ${info.event.extendedProps.skill}<br>
                         <strong>Ca học:</strong> ${info.event.extendedProps.caHoc}<br>
                         <strong>Thứ:</strong> ${info.event.extendedProps.thu}
@@ -77,8 +103,38 @@
             //     // Bạn có thể thay thế alert bằng modal chi tiết hơn
             // }
             // Thêm các tùy chỉnh khác của FullCalendar tại đây
+
+            eventClick: function(info) {
+                info.jsEvent.preventDefault(); // Chặn mở link mặc định
+
+                // Tiêu đề động
+                document.getElementById('eventDetailModalLabel').textContent = `Chi tiết lịch học lớp: ${info.event.extendedProps.className}`;
+
+                // Dữ liệu chi tiết
+                document.getElementById('modal-class').textContent = `${info.event.extendedProps.classCode} - ${info.event.extendedProps.className}`;
+                document.getElementById('modal-teacher').textContent = info.event.extendedProps.teacher;
+                document.getElementById('modal-room').textContent = info.event.extendedProps.room;
+                document.getElementById('modal-nhahoc').textContent = info.event.extendedProps.nhaHoc;
+                document.getElementById('modal-skill').textContent = info.event.extendedProps.skill;
+
+                // Ca học: tên ca + giờ bắt đầu - kết thúc
+                const caHocText = `${info.event.extendedProps.caHoc} (${info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${info.event.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
+                document.getElementById('modal-cahoc').textContent = caHocText;
+
+                document.getElementById('modal-thu').textContent = info.event.extendedProps.thu;
+
+                // Gán link chi tiết
+                document.getElementById('modal-detail-link').href = info.event.url;
+
+                // Show modal
+                var eventModal = new bootstrap.Modal(document.getElementById('eventDetailModal'));
+                eventModal.show();
+            },
+
+
         });
         calendar.render();
+
     });
 </script>
 

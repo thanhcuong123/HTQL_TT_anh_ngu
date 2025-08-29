@@ -10218,10 +10218,11 @@ h6,
 
 .jumbotron {
     background: linear-gradient(
-            rgba(40, 120, 235, 0.9),
-            rgba(40, 120, 235, 0.9)
+            to bottom,
+            rgba(40, 120, 235, 0.6),
+            rgba(18, 15, 45, 0.9)
         ),
-        url(../img/header.jpg), no-repeat center center;
+        url(../img/search.jpg), no-repeat center center;
     background-size: cover;
 }
 

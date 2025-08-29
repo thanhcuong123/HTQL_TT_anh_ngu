@@ -50,8 +50,8 @@
                         <th>Mã trình độ</th>
                         <th>Tên trình độ</th>
                         <th>Kỹ năng</th>
-                        <th>Học phí</th>
-                        <th>Năm Học</th>
+                        <!-- <th>Học phí</th>
+                        <th>Năm Học</th> -->
                         <th>Mô tả</th>
 
                         <th class="col-action">Hành động</th>
@@ -64,29 +64,23 @@
                         <td>{{ $td->ma }}</td>
                         <td>{{ $td->ten }}</td>
 
-                        <td>{{ $td->kynang->ten ?? 'chưa có'}}</td>
                         <td>
+                            {{ $td->kynangs->isNotEmpty() ? $td->kynangs->pluck('ten')->join(', ') : 'chưa có' }}
+                        </td>
+
+                        <!-- <td>
                             @if ($td->dongia)
                             {{ number_format($td->dongia->hocphi, 0, ',', '.') }} VNĐ
                             @else
                             Chưa có
                             @endif
                         </td>
-                        <td>{{ $td->dongia?->namhoc?->nam ?? 'Chưa có' }}</td>
+                        <td>{{ $td->dongia?->namhoc?->nam ?? 'Chưa có' }}</td> -->
                         <td>{!!$td->mota !!}</td>
 
                         <td class="col-action">
                             <!-- <a href="" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Xem</a> -->
-                            <a href="javascript:void(0);"
-                                class="btn btn-sm btn-warning btn-sua-trinhdo"
-                                data-id="{{ $td->ma }}"
-                                data-ten="{{ $td->ten }}"
-                                data-kynang="{{ $td->kynang?->ten }}"
-                                data-hocphi="{{ $td->dongia?->hocphi }}"
-                                data-namhoc="{{ $td->dongia?->namhoc?->nam  }}"
-                                data-mota="{!!   htmlspecialchars($td->mota) !!}">
-                                Sửa
-                            </a>
+
 
                             <form action="{{ route('trinhdo.destroy',$td->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa?')">
                                 @csrf

@@ -6,7 +6,7 @@
          <div class="row">
              <div class="col-lg-5 mb-5 mb-lg-0" style="min-height: 500px;">
                  <div class="position-relative h-100">
-                     <img class="position-absolute w-100 h-100" src="{{ asset('storage/river.jpg') }}" style="object-fit: cover;">
+                     <img class="position-absolute w-100 h-100" src="{{ asset('storage/river.png') }}" style="object-fit: cover;">
                  </div>
              </div>
              <div class="col-lg-7">
@@ -18,32 +18,35 @@
                  <p>Trung tâm còn cung cấp đa dạng các khóa học như tiếng Anh giao tiếp, luyện thi IELTS, TOEIC, tiếng Anh trẻ em và tiếng Anh doanh nghiệp, đáp ứng nhu cầu học tập của từng đối tượng. Cơ sở vật chất được đầu tư hiện đại, lớp học quy mô nhỏ giúp học viên dễ dàng tiếp thu và tương tác trực tiếp với giáo viên. Chúng tôi luôn đồng hành cùng học viên trên hành trình chinh phục tiếng Anh hiệu quả và bền vững.
 
                  </p>
-                 <!-- <div class="row pt-3 mx-0">
+
+                 <div class="row pt-3 mx-0">
                      <div class="col-3 px-0">
                          <div class="bg-success text-center p-4">
-                             <h1 class="text-white" data-toggle="counter-up">123</h1>
-                             <h6 class="text-uppercase text-white">Available<span class="d-block">Subjects</span></h6>
+                             <!--  <h1 class="text-white" data-toggle="counter-up">{{ $totalClasses }}</h1> -->
+                             <h1 class="text-white" data-toggle="counter-up">40</h1>
+                             <h6 class="text-uppercase text-white">Class<span class="d-block">của trung tâm</span></h6>
                          </div>
                      </div>
                      <div class="col-3 px-0">
                          <div class="bg-primary text-center p-4">
-                             <h1 class="text-white" data-toggle="counter-up">1234</h1>
-                             <h6 class="text-uppercase text-white">Online<span class="d-block">Courses</span></h6>
+                             <h1 class="text-white" data-toggle="counter-up">{{ $totalCourses }}</h1>
+                             <h6 class="text-uppercase text-white">Courses<span class="d-block">của trung tâm</span></h6>
                          </div>
                      </div>
                      <div class="col-3 px-0">
                          <div class="bg-secondary text-center p-4">
-                             <h1 class="text-white" data-toggle="counter-up">123</h1>
-                             <h6 class="text-uppercase text-white">Skilled<span class="d-block">Instructors</span></h6>
+                             <h1 class="text-white" data-toggle="counter-up">{{ $totalLevels }}</h1>
+                             <h6 class="text-uppercase text-white">Level<span class="d-block">của trung tâm</span></h6>
                          </div>
                      </div>
                      <div class="col-3 px-0">
                          <div class="bg-warning text-center p-4">
-                             <h1 class="text-white" data-toggle="counter-up">1234</h1>
-                             <h6 class="text-uppercase text-white">Happy<span class="d-block">Students</span></h6>
+                             <h1 class="text-white" data-toggle="counter-up">{{ $totalStudents }}</h1>
+                             <h6 class="text-uppercase text-white">Students<span class="d-block">của trung tâm</span></h6>
                          </div>
                      </div>
-                 </div> -->
+                 </div>
+
              </div>
          </div>
      </div>
@@ -120,7 +123,7 @@
                  <div class="bg-light text-center p-4">
                      <h5 class="mb-3">{{ $teacher->ten }}</h5>
                      <p class="mb-2">{{ $teacher->chuyenmon->tenchuyenmon ?? '' }}</p> {{-- Giả sử có trường 'specialization' (chuyên môn) --}}
-                     <!-- <div class="d-flex justify-content-center">
+                     <div class="d-flex justify-content-center">
                          {{-- Các liên kết mạng xã hội (kiểm tra xem trường có tồn tại không) --}}
                          @if($teacher->twitter_url)
                          <a class="mx-1 p-1" href="{{ $teacher->twitter_url }}" target="_blank"><i class="fab fa-twitter"></i></a>
@@ -137,7 +140,7 @@
                          @if($teacher->youtube_url)
                          <a class="mx-1 p-1" href="{{ $teacher->youtube_url }}" target="_blank"><i class="fab fa-youtube"></i></a>
                          @endif
-                     </div> -->
+                     </div>
                      <div class="d-flex justify-content-center">
                          <a class="mx-1 p-1" href="#"><i class="fab fa-twitter"></i></a>
                          <a class="mx-1 p-1" href="#"><i class="fab fa-facebook-f"></i></a>
@@ -418,8 +421,13 @@
                                  <select class="form-control border-top-0 border-right-0 border-left-0 p-0" id="khoahoc_id" name="khoahoc_id" required>
                                      <option value="">Chọn khóa học bạn quan tâm *</option>
                                      {{-- Vòng lặp để hiển thị các khóa học từ database --}}
-                                     @foreach($courses as $khoaHoc)
-                                     <option value="{{ $khoaHoc->id }}">{{ $khoaHoc->ten }}</option>
+                                     <!-- @foreach($courses as $khoaHoc)
+                                     <option value="{{ $khoaHoc->id }}">{{ $khoaHoc->ma }}</option>
+                                     @endforeach -->
+                                     @foreach ($khoahocss as $khoaHoc)
+                                     <option value="{{ $khoaHoc->khoahoc_id }}">
+                                         {{ $khoaHoc->khoahoc_ten }} - {{ $khoaHoc->trinhdo_ten }}
+                                     </option>
                                      @endforeach
                                  </select>
                                  @error('khoahoc_id')
@@ -447,4 +455,7 @@
          </div>
      </div>
  </div>
+
+
+
  @endsection

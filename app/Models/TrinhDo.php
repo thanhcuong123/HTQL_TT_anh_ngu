@@ -24,20 +24,34 @@ class TrinhDo extends Model
     const UPDATED_AT = 'update_at';
 
 
-    public function kynang()
+    // public function kynang()
+    // {
+    //     return $this->belongsTo(KyNang::class, 'kynang_id', 'id');
+    // }
+    public function dongias()
     {
-        return $this->belongsTo(KyNang::class, 'kynang_id', 'id');
+        return $this->hasMany(DonGia::class, 'trinhdo_id');
     }
+    // public function dongia() // <-- Đã đổi tên mối quan hệ thành 'dongia'
+    // {
+    //     return $this->hasOne(DonGia::class, 'trinhdo_id');
+    // }
     // public function dongia()
     // {
-    //     return $this->hasMany(DonGia::class, 'trinhdo_id');
+    //     return $this->hasOne(DonGia::class)
+    //         ->where('namhoc_id', '=', request()->namhoc_id); // Hoặc $this->namhoc_id nếu có
     // }
-    public function dongia() // <-- Đã đổi tên mối quan hệ thành 'dongia'
-    {
-        return $this->hasOne(DonGia::class, 'trinhdo_id');
-    }
+
     public function lopHocs()
     {
         return $this->hasMany(LopHoc::class, 'trinhdo_id');
+    }
+    public function kynangs()
+    {
+        return $this->belongsToMany(KyNang::class, 'trinhdo_kynang', 'trinhdo_id', 'kynang_id');
+    }
+    public function tuvanRequests()
+    {
+        return $this->hasMany(TuVan::class, 'trinhdo_id');
     }
 }

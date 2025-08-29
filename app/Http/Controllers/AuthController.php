@@ -40,14 +40,14 @@ class AuthController extends Controller
 
             // Điều hướng theo vai trò
             switch ($role) {
-                case 'admin':
-                    return redirect()->route('trangchu')->with('msg', 'Xin chào Admin');
+                case 'chutt':
+                    return redirect()->route('dashboard')->with('msg', 'Xin chào Admin');
                 case 'giaovien':
-                    return redirect()->route('trangchu')->with('msg', 'Xin chào Giáo viên');
+                    return redirect()->route('teacher.dashboard')->with('msg', 'Xin chào Giáo viên');
                 case 'hocvien':
-                    return redirect()->route('trangchu')->with('msg', 'Xin chào Học viên');
+                    return redirect()->route('student.dashboard')->with('msg', 'Xin chào Học viên');
                 case 'nhanvien':
-                    return redirect()->route('trangchu')->with('msg', 'Xin chào Nhân viên');
+                    return redirect()->route('staff.dashboard')->with('msg', 'Xin chào Nhân viên');
                 default:
                     Auth::logout();
                     return redirect()->route('login')->with('error', 'Vai trò người dùng không hợp lệ');

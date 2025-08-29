@@ -33,12 +33,15 @@ $(".btn-sua-hocvien").on("click", function () {
     $("#edit_diachi_hoc_vien").val(data.diachi);
     $("#edit_ngaysinh_hoc_vien").val(data.ngaysinh);
     $("#edit_gioitinh_hoc_vien").val(data.gioitinh);
+    //    const gioitinh = this.dataset.gioitinh;
+    //             document.getElementById('edit_gioitinh_nam').checked = gioitinh === 'Nam';
+    //             document.getElementById('edit_gioitinh_nu').checked = gioitinh === 'Nữ';
     $("#edit_ngaydangki_hoc_vien").val(data.ngaydangki);
     $("#edit_trangthai_hoc_vien").val(data.trangthai);
 
     // Cập nhật action của form chỉnh sửa
     // Sử dụng hàm route() của Laravel để tạo URL chính xác
-    $("#editHocVienForm").attr("action", `/admin/hocvien/update/${data.id}`); // Sửa lại URL
+    $("#editHocVienForm").attr("action", `/staff/hocvien/update/${data.id}`); // Sửa lại URL
 
     moPopup("editHocVienPopup");
 });

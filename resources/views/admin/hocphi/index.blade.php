@@ -137,17 +137,46 @@
                     <option value="sap_khai_giang">Sắp khai giảng</option>
                     <option value="da_huy">Đã hủy</option>
                 </select>
+                <select id="class-khoahoc-filter" class="form-select mt-2">
+                    <option value="">Tất cả khóa học</option>
+                    @foreach($khoahocs as $kh)
+                    @php
+                    // Lấy các trình độ duy nhất
+                    $uniqueTrinhDo = $kh->lopHocs->pluck('trinhDo')->unique('id')->filter();
+                    @endphp
+                    @foreach($uniqueTrinhDo as $trinhDo)
+                    @if($trinhDo)
+                    <option value="{{ $kh->id }}_{{ $trinhDo->id }}">
+                        {{ $kh->ma }} - {{ $trinhDo->ten }}
+                    </option>
+                    @endif
+                    @endforeach
+                    @endforeach
+                </select>
+
+
             </div>
 
             <div id="class-list-container">
                 @if(isset($classes) && $classes->count() > 0)
                 @foreach($classes as $class)
-                <div class="class-item" data-class-id="{{ $class->id }}" data-status="{{ $class->trangthai }}">
+                <!-- <div class="class-item" data-class-id="{{ $class->id }}" data-status="{{ $class->trangthai }}">
                     <h5>{{ $class->tenlophoc }}</h5>
                     <p>Mã lớp: {{ $class->malophoc }}</p>
                     <p>Số lượng học viên: {{ $class->hocviens->count() }}</p>
                     <p>Trạng thái: {{ $class->trangthai }}</p>
+                </div> -->
+                <div class="class-item"
+                    data-class-id="{{ $class->id }}"
+                    data-status="{{ $class->trangthai }}"
+                    data-khoahoc-trinhdo="{{ $class->khoahoc_id }}_{{ $class->trinhdo_id }}">
+                    <h5>{{ $class->tenlophoc }}</h5>
+                    <p>Mã lớp: {{ $class->malophoc }}</p>
+                    <p>Khóa học: {{ $class->khoahoc->ten ?? 'Chưa gán' }}</p>
+                    <p>Số lượng học viên: {{ $class->hocviens->count() }}</p>
+                    <p>Trạng thái: {{ $class->trangthai }}</p>
                 </div>
+
                 @endforeach
                 @else
                 <p>Không tìm thấy lớp học nào.</p>
@@ -162,7 +191,7 @@
             <div class="hocphi">
                 <h4>Danh sách học viên trong lớp <span id="selected-class-name"></span></h4>
                 <div class="">
-                    <button id="send-message-btn" class="btn btn-secondary">Gửi Email nhắc học phí</button>
+                    <button id="send-message-btn" class="btn btn-primary">Gửi Email nhắc học phí</button>
                 </div>
             </div>
             <div class="student-table-container">
@@ -224,7 +253,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="paymentMethod" class="form-label">Phương thức thanh toán:</label>
-                        <select class="form-select" id="paymentMethod" name="payment_method" required>
+                        <select class="form-select" id="paymentMethod" name="payment_method" required style="width:100%">
                             <option value="">Chọn phương thức</option>
                             <option value="tien_mat">Tiền mặt</option>
                             <option value="chuyen_khoan">Chuyển khoản</option>
@@ -264,25 +293,29 @@
         });
 
         // --- CHỨC NĂNG TÌM KIẾM VÀ LỌC LỚP HỌC ---
-        $('#class-search, #class-filter').on('keyup change', function() {
+        $('#class-search, #class-filter, #class-khoahoc-filter').on('keyup change', function() {
             const searchTerm = $('#class-search').val().toLowerCase();
             const filterStatus = $('#class-filter').val();
+            const filterKhoaHocTrinhDo = $('#class-khoahoc-filter').val();
 
             $('.class-item').each(function() {
                 const className = $(this).find('h5').text().toLowerCase();
                 const classCode = $(this).find('p:contains("Mã lớp")').text().toLowerCase();
                 const classStatus = $(this).data('status');
+                const classKhoaHocTrinhDo = $(this).data('khoahoc-trinhdo');
 
                 const matchesSearch = className.includes(searchTerm) || classCode.includes(searchTerm);
-                const matchesFilter = (filterStatus === '' || classStatus === filterStatus);
+                const matchesStatus = (filterStatus === '' || classStatus === filterStatus);
+                const matchesKhoaHocTrinhDo = (filterKhoaHocTrinhDo === '' || classKhoaHocTrinhDo === filterKhoaHocTrinhDo);
 
-                if (matchesSearch && matchesFilter) {
+                if (matchesSearch && matchesStatus && matchesKhoaHocTrinhDo) {
                     $(this).show();
                 } else {
                     $(this).hide();
                 }
             });
         });
+
 
         // --- XỬ LÝ CLICK VÀO LỚP HỌC ---
         $(document).on('click', '.class-item', function() {
@@ -336,7 +369,7 @@
 
             // Gửi AJAX request để lấy thông tin học phí
             $.ajax({
-                url: `/hocphi/get-tuition-info/${classId}/${studentId}`,
+                url: `/admin/hocphi/get-tuition-info/${classId}/${studentId}`,
                 method: 'GET',
                 success: function(response) {
                     console.log("Tuition info response:", response);
@@ -365,68 +398,6 @@
             });
         });
 
-        // --- XỬ LÝ GỬI FORM THANH TOÁN ---
-        // $('#paymentForm').submit(function(e) {
-        //     e.preventDefault();
-        //     const studentId = $('#modal-student-id').val();
-        //     const classId = $('#modal-class-id').val();
-        //     const amount = parseFloat($('#amountToPay').val());
-        //     // Lấy số tiền còn lại đã được định dạng và chuyển đổi ngược về số
-        //     const remainingText = $('#modal-remaining-amount').val();
-        //     const remaining = parseFloat(remainingText.replace(/ VNĐ/g, '').replace(/\./g, '').replace(/,/g, '')); // Dùng replace(/,/g, '') để loại bỏ dấu phân cách hàng nghìn nếu có
-
-        //     if (isNaN(amount) || amount <= 0 || amount > remaining + 0.01) { // Thêm 0.01 để xử lý sai số nhỏ
-        //         $('#payment-message').removeClass('alert-success alert-danger').addClass('alert-warning').text('Số tiền đóng không hợp lệ hoặc lớn hơn số tiền còn lại.').show();
-        //         return;
-        //     }
-
-        //     const formData = $(this).serialize();
-
-        //     $.ajax({
-        //         url: `/hocphi/process-payment`,
-        //         method: 'POST',
-        //         data: formData,
-        //         success: function(response) {
-        //             console.log("Payment success response:", response);
-        //             $('#payment-message').removeClass('alert-warning alert-danger').addClass('alert-success').text(response.message).show();
-
-        //             // Cập nhật trạng thái trực tiếp trong currentStudents và hiển thị lại
-        //             const updatedInfo = response.updated_tuition_info;
-        //             const studentIndex = currentStudents.findIndex(s => s.id == updatedInfo.student_id); // Dùng == để so sánh số và chuỗi
-        //             if (studentIndex > -1) {
-        //                 currentStudents[studentIndex].hocphi_status = updatedInfo.hocphi_status;
-        //                 currentStudents[studentIndex].hocphi_badge_class = updatedInfo.hocphi_badge_class;
-        //                 currentStudents[studentIndex].paid_amount = updatedInfo.paid_amount;
-        //                 currentStudents[studentIndex].remaining_amount = updatedInfo.remaining_amount;
-        //                 currentStudents[studentIndex].total_tuition = updatedInfo.total_tuition; // Cập nhật cả tổng học phí nếu có thể thay đổi
-        //             }
-
-        //             // Tải lại danh sách học viên (chỉ hiển thị lại từ biến `currentStudents`)
-        //             // Gọi `displayStudents` với từ khóa tìm kiếm hiện tại để giữ bộ lọc
-        //             const currentStudentSearchTerm = $('#student-search').val().toLowerCase();
-        //             displayStudents(currentStudents, classId, currentStudentSearchTerm);
-
-        //             // Đóng modal Bootstrap sau khi cập nhật
-        //             var paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
-        //             if (paymentModal) {
-        //                 paymentModal.hide();
-        //             }
-        //             $('#paymentForm')[0].reset(); // Reset form
-        //             $('#payment-message').hide(); // Ẩn thông báo
-        //         },
-        //         error: function(xhr) {
-        //             let errorMessage = 'Đã xảy ra lỗi khi xử lý thanh toán.';
-        //             if (xhr.responseJSON && xhr.responseJSON.message) {
-        //                 errorMessage = xhr.responseJSON.message;
-        //             } else if (xhr.responseText) {
-        //                 errorMessage = xhr.responseText;
-        //             }
-        //             $('#payment-message').removeClass('alert-warning alert-success').addClass('alert-danger').text(errorMessage).show();
-        //             console.error('Error processing payment:', xhr.responseText);
-        //         }
-        //     });
-        // });
-
 
         // --- XỬ LÝ GỬI FORM THANH TOÁN ---
         $('#paymentForm').submit(function(e) {
@@ -449,7 +420,7 @@
             const formData = $(this).serialize();
 
             $.ajax({
-                url: `/hocphi/process-payment`,
+                url: `/admin/hocphi/process-payment`,
                 method: 'POST',
                 data: formData,
                 success: function(response) {
@@ -512,7 +483,7 @@
             }
 
             $.ajax({
-                url: `/hocphi/send-reminders`,
+                url: `/admin/hocphi/send-reminders`,
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
@@ -547,25 +518,6 @@
     }); // End $(document).ready
 
 
-    // --- HÀM TẢI HỌC VIÊN TỪ SERVER VÀ LƯU VÀO BIẾN TOÀN CỤC ---
-    // function loadStudents(classId, className) {
-    //     $('#student-list-tbody').html('<tr><td colspan="6" class="text-center">Đang tải danh sách học viên...</td></tr>');
-    //     $('#selected-class-name').text(className);
-    //     $('#student-search').val(''); // Xóa ô tìm kiếm học viên khi đổi lớp
-
-    //     $.ajax({
-    //         url: '/classes/' + classId + '/students',
-    //         method: 'GET',
-    //         success: function(response) {
-    //             currentStudents = response.students || []; // Lưu dữ liệu học viên vào biến toàn cục
-    //             displayStudents(currentStudents, classId); // Hiển thị tất cả học viên lần đầu (không có từ khóa tìm kiếm)
-    //         },
-    //         error: function(xhr) {
-    //             console.error('Error loading students:', xhr.responseText);
-    //             $('#student-list-tbody').html('<tr><td colspan="6" class="text-center text-danger">Lỗi khi tải danh sách học viên.</td></tr>');
-    //         }
-    //     });
-    // }
 
 
     // --- HÀM TẢI HỌC VIÊN TỪ SERVER VÀ LƯU VÀO BIẾN TOÀN CỤC ---
@@ -575,7 +527,7 @@
         $('#student-search').val(''); // Xóa ô tìm kiếm học viên khi đổi lớp
 
         $.ajax({
-            url: '/classes/' + classId + '/students', // Route để lấy danh sách học viên và thông tin học phí
+            url: '/admin/classes/' + classId + '/students', // Route để lấy danh sách học viên và thông tin học phí
             method: 'GET',
             success: function(response) {
                 // Đảm bảo response.students chứa các trường total_tuition, paid_amount, remaining_amount, hocphi_status, hocphi_badge_class
@@ -588,60 +540,7 @@
             }
         });
     }
-    // --- HÀM ĐỂ LỌC VÀ HIỂN THỊ HỌC VIÊN TỪ BIẾN TOÀN CỤC `currentStudents` ---
-    /*
-    function displayStudents(students, classId, searchTerm = '') {
-        let studentRowsHtml = '';
-        let hasVisibleStudents = false;
 
-        if (students && students.length > 0) {
-            students.forEach(function(student) {
-                const mahocvien = (student.mahocvien || '').toLowerCase();
-                const ten = (student.ten || '').toLowerCase();
-                const sdt = (student.sdt ? String(student.sdt) : '').toLowerCase(); // Đảm bảo sdt là chuỗi
-
-                // Kiểm tra xem học viên có khớp với từ khóa tìm kiếm không
-                const matchesSearch = searchTerm === '' ||
-                    mahocvien.includes(searchTerm) ||
-                    ten.includes(searchTerm) ||
-                    sdt.includes(searchTerm);
-
-                if (matchesSearch) {
-                    hasVisibleStudents = true;
-                    const currentStatus = student.hocphi_status || 'Chưa xác định';
-                    // Tạo nút "In biên lai" chỉ khi trạng thái là 'Đã đóng đủ'
-                    const printReceiptBtn = currentStatus === 'Đã đóng đủ' ?
-                        `<a href="/phieuthu/print/${student.id}/${classId}" target="_blank" class="text-primary print-receipt-btn" data-student-id="${student.id}" data-class-id="${classId}">In biên lai</a>` :
-                        '';
-
-                    studentRowsHtml += `
-                        <tr id="student-row-${student.id}">
-                            <td><input type="checkbox" class="student-checkbox" data-student-id="${student.id}"></td>
-                            <td>${student.mahocvien || ''}</td>
-                            <td>${student.ten || ''}</td>
-                            <td>${student.sdt || ''}</td>
-                            <td>${student.ngaydangky || ''}</td>
-                            <td class="tuition-status-col">
-                                <span class="${student.hocphi_badge_class || 'badge bg-secondary'}">${currentStatus}</span>
-                                <div class="mt-1">
-                                    <a href="#" class="text-info thu-hoc-phi-btn" data-student-id="${student.id}" data-class-id="${classId}">Thu học phí</a>
-                                    ${printReceiptBtn}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }
-            });
-        }
-
-        if (!hasVisibleStudents) {
-            studentRowsHtml = '<tr><td colspan="6" class="text-center">Không tìm thấy học viên nào phù hợp.</td></tr>';
-        }
-
-        $('#student-list-tbody').html(studentRowsHtml);
-        // Đảm bảo "Select All" checkbox được reset khi danh sách học viên thay đổi
-        $('#select-all-students').prop('checked', false);
-    }*/
     // --- HÀM ĐỂ LỌC VÀ HIỂN THỊ HỌC VIÊN TỪ BIẾN TOÀN CỤC `currentStudents` ---
     function displayStudents(students, classId, searchTerm = '') {
         let studentRowsHtml = '';
@@ -661,13 +560,14 @@
                 if (matchesSearch) {
                     hasVisibleStudents = true;
 
-                    // Lấy thông tin học phí đã được tính toán từ backend
+                    // Thông tin học phí đã tính toán từ backend
                     const totalTuition = student.total_tuition || 0;
                     const paidAmount = student.paid_amount || 0;
-                    const remainingAmount = student.remaining_amount || totalTuition - paidAmount; // Đảm bảo remaining_amount được tính đúng
+                    const remainingAmount = student.remaining_amount !== undefined ? student.remaining_amount : (totalTuition - paidAmount);
 
                     let currentStatus = 'Chưa xác định';
                     let badgeClass = 'badge bg-secondary';
+                    let thuHocPhiBtn = '';
                     let printReceiptBtn = '';
 
                     if (totalTuition === 0) {
@@ -676,16 +576,16 @@
                     } else if (remainingAmount <= 0) {
                         currentStatus = 'Đã đóng đủ';
                         badgeClass = 'badge bg-success';
-                        // Nút In biên lai chỉ hiện khi đã đóng đủ
-                        printReceiptBtn = `<a href="/phieuthu/print/${student.id}/${classId}" target="_blank" class="text-primary print-receipt-btn" data-student-id="${student.id}" data-class-id="${classId}">In biên lai</a>`;
+                        printReceiptBtn = `<a href="/admin/phieuthu/print/${student.id}/${classId}" target="_blank" class="text-primary print-receipt-btn" data-student-id="${student.id}" data-class-id="${classId}">In biên lai</a>`;
                     } else if (paidAmount > 0 && remainingAmount > 0) {
-                        currentStatus = `Còn nợ (${(remainingAmount).toLocaleString('vi-VN')} VNĐ)`;
+                        currentStatus = `Còn nợ (${remainingAmount.toLocaleString('vi-VN')} VNĐ)`;
                         badgeClass = 'badge bg-warning text-dark';
-                    } else { // paidAmount === 0 && remainingAmount > 0
+                        thuHocPhiBtn = `<a href="#" class="text-info thu-hoc-phi-btn" data-student-id="${student.id}" data-class-id="${classId}">Thu học phí</a>`;
+                    } else {
                         currentStatus = 'Chưa đóng';
                         badgeClass = 'badge bg-danger';
+                        thuHocPhiBtn = `<a href="#" class="text-info thu-hoc-phi-btn" data-student-id="${student.id}" data-class-id="${classId}">Thu học phí</a>`;
                     }
-
 
                     studentRowsHtml += `
                     <tr id="student-row-${student.id}">
@@ -697,7 +597,7 @@
                         <td class="tuition-status-col">
                             <span class="${badgeClass}">${currentStatus}</span>
                             <div class="mt-1">
-                                <a href="#" class="text-info thu-hoc-phi-btn" data-student-id="${student.id}" data-class-id="${classId}">Thu học phí</a>
+                                ${thuHocPhiBtn}
                                 ${printReceiptBtn}
                             </div>
                         </td>
@@ -708,7 +608,7 @@
         }
 
         if (!hasVisibleStudents) {
-            studentRowsHtml = '<tr><td colspan="6" class="text-center">Không tìm thấy học viên nào phù hợp.</td></tr>';
+            studentRowsHtml = '<tr><td colspan="6" class="text-center">Lớp học này chưa có học viên nào đăng ký</td></tr>';
         }
 
         $('#student-list-tbody').html(studentRowsHtml);

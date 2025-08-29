@@ -8,17 +8,30 @@
     @if ($keyword_searched)
     <p class="lead">Tìm kiếm cho: <strong>"{{ $keyword_searched }}"</strong></p>
     @endif
-    @if ($khoahoc_id_selected && !isset($selectedKhoaHoc))
+    <!-- @if ($khoahoc_id_selected && !isset($selectedKhoaHoc))
     <p class="lead">Trong khóa học: <strong>{{ \App\Models\KhoaHoc::find($khoahoc_id_selected)->ten ?? 'Không xác định' }}</strong></p>
-    @endif
+    @endif -->
 
     <hr>
 
     {{-- PHẦN 1: Hiển thị nếu chỉ chọn Khóa học từ dropdown (không có từ khóa) --}}
     @if (isset($selectedKhoaHoc) && !$keyword_searched)
     <div class="mb-5">
-        <h2 class="mb-4">Thông tin khóa học: <span class="search-highlight-target">{{ $selectedKhoaHoc->ten }}</span></h2>
-        <div class="row mb-4">
+        @php
+        $trinhDo = optional($selectedKhoaHoc->lopHocs->first())->trinhDo;
+        @endphp
+
+        <!-- <h2 class="mb-4">
+            Thông tin khóa học:
+            <span class="search-highlight-target">
+                {{ $selectedKhoaHoc->ten }}
+                @if($trinhDo)
+                - {{ $trinhDo->ten }}
+                @endif
+            </span>
+        </h2> -->
+
+        <!-- <div class="row mb-4">
             <div class="col-md-12">
                 <div class="card border-0 shadow-sm h-100 class-card">
                     <div class="card-body">
@@ -31,7 +44,14 @@
                                 @endif
                             </div>
                             <div class="col-md-9">
-                                <h5 class="card-title text-primary search-highlight-target">{{ $selectedKhoaHoc->ten }}</h5>
+                                @php
+                                $trinhDo = optional($selectedKhoaHoc->lopHocs->first())->trinhDo;
+                                @endphp
+                                <h5 class="card-title text-primary search-highlight-target"> {{ $selectedKhoaHoc->ten }}
+                                    @if($trinhDo)
+                                    - {{ $trinhDo->ten }}
+                                    @endif
+                                </h5>
                                 <p class="card-text mb-2">
                                     <strong>Mô tả:</strong> <span class="search-highlight-target">{{ strip_tags($selectedKhoaHoc->mota ?? 'Đang cập nhật') }}</span>
                                 </p>
@@ -41,7 +61,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
         <hr>
 
         <div class="mb-5">
@@ -82,7 +102,7 @@
         </div>
         @else {{-- PHẦN 2: Hiển thị kết quả tổng hợp (có từ khóa hoặc không chọn khóa học cụ thể) --}}
         {{-- Phần kết quả Khóa học --}}
-        @if ($khoaHocResults->count() > 0)
+        <!-- @if ($khoaHocResults->count() > 0)
         <div class="mb-5">
             <h2 class="mb-4">Các khóa học liên quan</h2>
             <div class="row">
@@ -107,7 +127,7 @@
             </div>
         </div>
         <hr>
-        @endif
+        @endif -->
 
         {{-- Phần kết quả Lớp học --}}
         @if ($lopHocResults->count() > 0)
@@ -128,7 +148,7 @@
                                 <strong>Mã lớp:</strong> <span class="search-highlight-target">{{ $lopHoc->malophoc }}</span>
                             </p>
                             <p class="card-text mb-1">
-                                <strong>Khóa học:</strong> <span class="search-highlight-target">{{ $lopHoc->khoaHoc->ten ?? 'N/A' }}</span>
+                                <strong>Khóa học:</strong> <span class="search-highlight-target">{{ $lopHoc->khoaHoc->ma ?? 'N/A' }}</span>
                             </p>
                             <p class="card-text mb-1">
                                 <strong>Trình độ:</strong> <span class="search-highlight-target">{{ $lopHoc->trinhDo->ten ?? 'N/A' }}</span>
@@ -246,7 +266,7 @@
                                     <option value="">Chọn khóa học bạn quan tâm *</option>
                                     {{-- Vòng lặp để hiển thị các khóa học từ database --}}
                                     @foreach($courses as $khoaHoc)
-                                    <option value="{{ $khoaHoc->id }}">{{ $khoaHoc->ten }}</option>
+                                    <option value="{{ $khoaHoc->id }}">{{ $khoaHoc->ma }}</option>
                                     @endforeach
                                 </select>
                                 @error('khoahoc_id')

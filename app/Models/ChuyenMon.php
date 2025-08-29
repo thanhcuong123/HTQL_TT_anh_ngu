@@ -11,6 +11,7 @@ class ChuyenMon extends Model
     protected $table = 'chuyenmon';
     protected $primarykey = 'id';
     protected $fillable = [
+        'machuyenmon',
         'tenchuyenmon',
         'mota'
     ];

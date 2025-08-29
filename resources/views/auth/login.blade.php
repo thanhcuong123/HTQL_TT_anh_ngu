@@ -97,6 +97,7 @@
 
         <form action="{{ route('login.post') }}" method="POST">
             @csrf
+            @csrf
             <div class="form-group">
                 <label for="email">Email:</label>
                 <input type="email" id="email" name="email" placeholder="Nhập email đăng nhập" required>

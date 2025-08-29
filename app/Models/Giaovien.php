@@ -27,6 +27,7 @@ class GiaoVien extends Model
         'diachi',
         'stk',
         'trangthai',
+        'email_gv'
 
     ];
 

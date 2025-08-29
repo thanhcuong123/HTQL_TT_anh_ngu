@@ -29,7 +29,39 @@
       </div>
   </div>
   <!-- Topbar End -->
+  <style>
+      /* Ẩn dropdown ban đầu */
+      .nav-item.dropdown .dropdown-menu {
+          display: block;
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(10px);
+          transition: all 0.3s ease;
+          margin-top: 0;
+          /* bỏ khoảng trống */
+          border-radius: 8px;
+          box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+          padding: 10px 0;
+      }
 
+      /* Khi hover thì mượt mà hiện ra */
+      .nav-item.dropdown:hover .dropdown-menu {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+      }
+
+      /* Style item bên trong dropdown */
+      .dropdown-menu .dropdown-item {
+          padding: 10px 20px;
+          transition: background 0.2s ease, padding-left 0.2s ease;
+      }
+
+      .dropdown-menu .dropdown-item:hover {
+          background-color: #f0f8ff;
+          padding-left: 25px;
+      }
+  </style>
 
   <!-- Navbar Start -->
   <div class="container-fluid p-0">
@@ -49,11 +81,27 @@
                   <a href="{{ route('gioithieu') }}" class="nav-item nav-link {{ Route::currentRouteName() == 'gioithieu' ? 'active' : '' }}">GIỚI THIỆU</a>
 
                   {{-- Các khóa học link --}}
-                  <a href="{{ route('courses') }}" class="nav-item nav-link {{ Route::currentRouteName() == 'courses' ? 'active' : '' }}">KHÓA HỌC</a>
+                  <!-- <a href="{{ route('courses') }}" class="nav-item nav-link {{ Route::currentRouteName() == 'courses' ? 'active' : '' }}">KHÓA HỌC</a> -->
+
+
+                  <!-- In pages/layout/hearder.blade.php (or your header view) -->
+                  <li class="nav-item dropdown">
+                      <a href="#" class="nav-link">KHÓA HỌC</a>
+                      <div class="dropdown-menu">
+                          @foreach ($khoahocss as $khoaHoc)
+                          <a class="dropdown-item"
+                              href="{{ route('lop-hoc.byKhoaHoc', ['khoaHocId' => $khoaHoc->khoahoc_id, 'trinhDoId' => $khoaHoc->trinhdo_id]) }}">
+                              Khóa {{ $khoaHoc->khoahoc_ten }} - Trình độ {{ $khoaHoc->trinhdo_ten }}
+                          </a>
+                          @endforeach
+                      </div>
+                  </li>
+
+
 
                   {{-- Contact link --}}
                   {{-- Giả sử tên route của trang liên hệ là 'contact' --}}
-                  <a href="{{ route('contact') }}" class="nav-item nav-link {{ Route::currentRouteName() == 'contact' ? 'active' : '' }}">LIÊN HỆ</a>
+                  <a href="{{ route('user.tintuc') }}" class="nav-item nav-link {{ Route::currentRouteName() == 'user.tintuc' ? 'active' : '' }}">TIN TỨC</a>
               </div>
 
               {{-- Phần xử lý đăng nhập/thông tin người dùng --}}
@@ -79,17 +127,17 @@
                       <span>{{ $tenHienThi }}</span>
                   </a>
                   <div class="dropdown-menu m-0 dropdown-menu-right">
-                      <a href="" class="dropdown-item">Hồ sơ của bạn</a>
-                      <div class="dropdown-divider"></div>
+                      <!-- <a href="" class="dropdown-item">Hồ sơ của bạn</a> -->
+                      <!-- <div class="dropdown-divider"></div> -->
 
-                      @if(Auth::user()->role === 'admin')
+                      @if(Auth::user()->role === 'chutt')
                       <a href="{{ route('dashboard') }}" class="dropdown-item">Hệ thống quản lý </a>
                       @elseif(Auth::user()->role === 'giaovien')
-                      <a href="" class="dropdown-item">Quản lý Giáo viên</a>
+                      <a href="{{ route('teacher.dashboard' ) }}" class="dropdown-item">Quản lý Giáo viên</a>
                       @elseif(Auth::user()->role === 'nhanvien')
-                      <a href="{{ route('staff.lophoc') }}" class="dropdown-item">Nhân viên</a>
+                      <a href="{{ route('staff.dashboard') }}" class="dropdown-item">Nhân viên</a>
                       @elseif(Auth::user()->role === 'hocvien')
-                      <a href="" class="dropdown-item">Trang Học viên</a>
+                      <a href="{{ route('student.dashboard') }}" class="dropdown-item">Trang Học viên</a>
                       @endif
                       <div class="dropdown-divider"></div>
 
@@ -106,4 +154,30 @@
           </div>
       </nav>
   </div>
+  <script>
+      //   document.getElementById('selectKhoaHoc').addEventListener('change', function() {
+      //       let khoaHocId = this.value;
+      //       if (khoaHocId) {
+      //           window.location.href = '/lop-hoc/khoa-hoc/' + khoaHocId;
+      //       }
+      //   });
+      document.querySelector('.nav-item.dropdown').addEventListener('mouseenter', function() {
+          let menu = this.querySelector('.dropdown-menu');
+          if (!menu.dataset.loaded) {
+              fetch('/api/khoa-hoc-list')
+                  .then(res => res.json())
+                  .then(data => {
+                      menu.innerHTML = '';
+                      data.forEach(item => {
+                          menu.innerHTML += `
+                        <a class="dropdown-item" href="/lop-hoc/${item.id}">
+                            Khóa ${item.ten} - Trình độ ${item.trinhdo}
+                        </a>
+                    `;
+                      });
+                      menu.dataset.loaded = true;
+                  });
+          }
+      });
+  </script>
   <!-- Navbar End -->

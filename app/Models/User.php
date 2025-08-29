@@ -22,7 +22,8 @@ class User extends Authenticatable
         'email',
         'email_xacthuc',
         'password',
-        'role'
+        'role',
+        'trangthai',
     ];
     protected $hidden = 'matkhau';
     const CREATED_AT = 'create_at';
@@ -54,6 +55,10 @@ class User extends Authenticatable
 
 
 
+    public function nhanvien()
+    {
+        return $this->hasOne(NhanVien::class, 'user_id');
+    }
 
     // /**
     //  * The attributes that should be hidden for serialization.

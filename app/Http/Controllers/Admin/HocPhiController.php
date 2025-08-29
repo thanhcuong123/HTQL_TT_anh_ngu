@@ -11,142 +11,87 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\TuitionReminderMail;
-
+use App\Models\DonGia;
+use App\Models\KhoaHoc;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class HocPhiController extends Controller
 {
     public function index()
     {
         $classes = LopHoc::all();
-        return view('admin.hocphi.index', compact('classes'));
+        $khoahocs = KhoaHoc::with('lopHocs.trinhDo')->get();
+
+        return view('admin.hocphi.index', compact('classes', 'khoahocs'));
     }
 
-    // public function getStudentsByClass($classId)
-    // {
-    //     // 1. Tìm lớp học và eager load các học viên liên quan.
-    //     // Quan trọng: Eager load cả trinhdo.dongia để lấy tổng học phí của lớp.
-    //     // Eager load phieuthus của hocvien để tính tổng số tiền đã đóng.
-    //     $class = LopHoc::with([
-    //         'hocviens' => function ($query) {
-    //             $query->with('user')->withPivot('ngaydangky');
-    //         },
-    //         'trinhdo.dongia' // <-- THÊM DÒNG NÀY để tải thông tin đơn giá của lớp
-    //     ])->find($classId);
 
-    //     if (!$class) {
-    //         return response()->json(['message' => 'Lớp học không tìm thấy.'], 404);
-    //     }
 
-    //     // Lấy tổng học phí của lớp từ DonGia
-    //     $totalTuitionForClass = 0;
-    //     if ($class->trinhdo && $class->trinhdo->dongia) {
-    //         $totalTuitionForClass = $class->trinhdo->dongia->hocphi;
-    //     }
 
-    //     // 2. Chuyển đổi dữ liệu học viên để bao gồm các trường cần thiết cho frontend
-    //     $studentsData = $class->hocviens->map(function ($hocvien) use ($classId, $totalTuitionForClass) {
-
-    //         // Tính tổng số tiền đã đóng của học viên này cho LỚP NÀY
-    //         $paidAmount = PhieuThu::where('hocvien_id', $hocvien->id)
-    //             ->where('lophoc_id', $classId)
-    //             ->where('trangthai', 'da_thanh_toan')
-    //             ->sum('sotien'); // <== Đảm bảo tên cột là 'sotien'
-
-    //         $remainingAmount = $totalTuitionForClass - $paidAmount;
-
-    //         $tuitionStatus = 'Chưa xác định';
-    //         $badgeClass = 'badge bg-secondary';
-
-    //         if ($totalTuitionForClass == 0) {
-    //             $tuitionStatus = 'Chưa có học phí lớp này';
-    //             $badgeClass = 'badge bg-danger';
-    //         } elseif ($remainingAmount <= 0) {
-    //             $tuitionStatus = 'Đã đóng đủ';
-    //             $badgeClass = 'badge bg-success';
-    //         } elseif ($paidAmount > 0 && $remainingAmount > 0) {
-    //             // Hiển thị số tiền còn nợ
-    //             $tuitionStatus = 'Còn nợ (' . number_format($remainingAmount, 0, ',', '.') . ' VNĐ)';
-    //             $badgeClass = 'badge bg-warning text-dark';
-    //         } else { // paidAmount == 0 && remainingAmount > 0 (hoặc totalTuition > 0)
-    //             $tuitionStatus = 'Chưa đóng';
-    //             $badgeClass = 'badge bg-danger';
-    //         }
-
-    //         return [
-    //             'id' => $hocvien->id,
-    //             'mahocvien' => $hocvien->mahocvien,
-    //             'ten' => $hocvien->ten,
-    //             'sdt' => $hocvien->sdt ?? 'N/A',
-    //             'ngaydangky' => $hocvien->pivot->ngaydangky ? date('d/m/Y', strtotime($hocvien->pivot->ngaydangky)) : 'N/A',
-    //             'hocphi_status' => $tuitionStatus,
-    //             'hocphi_badge_class' => $badgeClass,
-    //             'email' => $hocvien->user->email ?? 'N/A',
-    //             // THÊM CÁC THÔNG TIN NÀY ĐỂ KHI CẦN HIỂN THỊ TRỰC TIẾP TRÊN BẢNG (nếu muốn)
-    //             'total_tuition_amount' => $totalTuitionForClass,
-    //             'paid_amount_student' => $paidAmount,
-    //             'remaining_amount_student' => $remainingAmount,
-    //         ];
-    //     });
-
-    //     // dd($studentsData); // Bỏ comment dòng này để kiểm tra dữ liệu trước khi gửi về frontend
-
-    //     return response()->json(['students' => $studentsData]);
-    // }
 
 
 
     public function getStudentsByClass($classId)
     {
-        // 1. Tìm lớp học và eager load các học viên liên quan.
-        // Quan trọng: Eager load cả trinhdo.dongia để lấy tổng học phí của lớp.
+        // 1️⃣ Lấy lớp học + học viên + trình độ + TẤT CẢ đơn giá
         $class = LopHoc::with([
             'hocviens' => function ($query) {
-                // Eager load mối quan hệ 'user' của học viên để lấy email (nếu cần)
-                // và lấy các trường từ bảng pivot 'ngaydangky'
                 $query->with('user')->withPivot('ngaydangky');
             },
-            'trinhdo.dongia' // Eager load thông tin đơn giá qua trình độ của lớp
+            'trinhdo.dongias',
+            'khoahoc'
         ])->find($classId);
 
         if (!$class) {
-            return response()->json(['message' => 'Lớp học không tìm thấy.'], 404);
+            return response()->json(['message' => 'Không tìm thấy lớp học.'], 404);
         }
 
-        // Lấy tổng học phí của lớp từ DonGia
+        $trinhdo = $class->trinhdo;
+
+        if (!$trinhdo) {
+            return response()->json(['message' => 'Không tìm thấy trình độ của lớp học.'], 422);
+        }
+
+        // 2️⃣ Xác định năm học
+        $namhocId = $class->namhoc_id ?? optional($class->khoahoc)->namhoc_id;
+
+        if (!$namhocId) {
+            return response()->json(['message' => 'Không tìm thấy năm học. Vui lòng kiểm tra dữ liệu.'], 422);
+        }
+
+        // 3️⃣ Lấy đơn giá theo năm học
+        $dongia = $trinhdo->dongias->where('namhoc_id', $namhocId)->first();
+
         $totalTuitionForClass = 0;
-        if ($class->trinhdo && $class->trinhdo->dongia) {
-            $totalTuitionForClass = $class->trinhdo->dongia->hocphi;
+        if ($dongia) {
+            $totalTuitionForClass = round($dongia->hocphi, 2);
         }
 
-        // 2. Chuyển đổi dữ liệu học viên để bao gồm các trường cần thiết cho frontend
+        // 4️⃣ Map thông tin học viên
         $studentsData = $class->hocviens->map(function ($hocvien) use ($classId, $totalTuitionForClass) {
-
-            // Tính tổng số tiền đã đóng của học viên này cho LỚP NÀY
-            // Chỉ tổng hợp các phiếu thu có trạng thái 'da_thanh_toan' (đã xác nhận đóng)
             $paidAmount = PhieuThu::where('hocvien_id', $hocvien->id)
                 ->where('lophoc_id', $classId)
                 ->where('trangthai', 'da_thanh_toan')
-                ->sum('sotien'); // Đảm bảo tên cột là 'sotien' trong bảng phieuthu
+                ->sum('sotien');
 
-            // Tính số tiền còn lại phải đóng
-            $remainingAmount = $totalTuitionForClass - $paidAmount;
+            $paidAmount = round($paidAmount, 2);
+            $remainingAmount = max(0, round($totalTuitionForClass - $paidAmount, 2));
 
-            // Xác định trạng thái học phí và class CSS tương ứng để hiển thị trên giao diện
+            // Trạng thái
             $tuitionStatus = 'Chưa xác định';
             $badgeClass = 'badge bg-secondary';
 
             if ($totalTuitionForClass == 0) {
                 $tuitionStatus = 'Chưa có học phí lớp này';
-                $badgeClass = 'badge bg-info'; // Hoặc bg-danger tùy ý bạn
+                $badgeClass = 'badge bg-info';
             } elseif ($remainingAmount <= 0) {
                 $tuitionStatus = 'Đã đóng đủ';
                 $badgeClass = 'badge bg-success';
             } elseif ($paidAmount > 0 && $remainingAmount > 0) {
-                // Hiển thị số tiền còn nợ kèm theo định dạng tiền tệ
                 $tuitionStatus = 'Còn nợ (' . number_format($remainingAmount, 0, ',', '.') . ' VNĐ)';
                 $badgeClass = 'badge bg-warning text-dark';
-            } else { // paidAmount == 0 && remainingAmount > 0 (hoặc totalTuitionForClass > 0)
+            } else {
                 $tuitionStatus = 'Chưa đóng';
                 $badgeClass = 'badge bg-danger';
             }
@@ -156,25 +101,76 @@ class HocPhiController extends Controller
                 'mahocvien' => $hocvien->mahocvien,
                 'ten' => $hocvien->ten,
                 'sdt' => $hocvien->sdt ?? 'N/A',
-                // Lấy ngày đăng ký từ bảng pivot (hocvien_lophoc)
-                'ngaydangky' => $hocvien->pivot->ngaydangky ? date('d/m/Y', strtotime($hocvien->pivot->ngaydangky)) : 'N/A',
+                'ngaydangky' => $hocvien->pivot->ngaydangky
+                    ? date('d/m/Y', strtotime($hocvien->pivot->ngaydangky))
+                    : 'N/A',
                 'hocphi_status' => $tuitionStatus,
                 'hocphi_badge_class' => $badgeClass,
                 'email' => $hocvien->user->email ?? 'N/A',
-                // Thêm các thông tin số tiền để frontend có thể sử dụng trực tiếp trong modal
                 'total_tuition' => $totalTuitionForClass,
                 'paid_amount' => $paidAmount,
                 'remaining_amount' => $remainingAmount,
             ];
         });
 
-        // Trả về dữ liệu dưới dạng JSON
         return response()->json(['students' => $studentsData]);
     }
-    // public function getTuitionInfo($classId, $studentId)
-    // {
+
+    public function getTuitionInfo($classId, $studentId)
+    {
+        // 1️⃣ Tải lớp học cùng quan hệ khoahoc & trinhdo
+        $class = LopHoc::with(['khoahoc', 'trinhdo'])->find($classId);
+        $student = HocVien::find($studentId);
+
+        if (!$class || !$student) {
+            return response()->json(['message' => 'Lớp học hoặc học viên không tìm thấy.'], 404);
+        }
+
+        // 2️⃣ Lấy trình độ từ lớp học
+        $trinhdoId = $class->trinhdo_id ?? optional($class->trinhdo)->id;
+        if (!$trinhdoId) {
+            return response()->json(['message' => 'Không tìm thấy trình độ của lớp học.'], 422);
+        }
+
+        // 3️⃣ Ưu tiên lấy namhoc_id từ LopHoc, fallback sang KhoaHoc
+        $namhocId = $class->namhoc_id ?? optional($class->khoahoc)->namhoc_id;
+
+        if (!$namhocId) {
+            return response()->json(['message' => 'Không tìm thấy năm học. Vui lòng kiểm tra dữ liệu.'], 422);
+        }
+
+        // 4️⃣ Tìm đơn giá đúng trình độ + năm học
+        $dongia = DonGia::where('trinhdo_id', $trinhdoId)
+            ->where('namhoc_id', $namhocId)
+            ->first();
+
+        if (!$dongia) {
+            return response()->json(['message' => 'Không tìm thấy đơn giá cho trình độ & năm học này.'], 404);
+        }
+
+        $totalTuition = round($dongia->hocphi, 2);
+
+        // 5️⃣ Tính tổng số tiền đã đóng
+        $paidAmount = PhieuThu::where('hocvien_id', $studentId)
+            ->where('lophoc_id', $classId)
+            ->where('trangthai', 'da_thanh_toan')
+            ->sum('sotien');
+        $paidAmount = round($paidAmount, 2);
+
+        // 6️⃣ Tính số tiền còn lại
+        $remainingAmount = max(0, round($totalTuition - $paidAmount, 2));
+
+        return response()->json([
+            'total_tuition'   => $totalTuition,
+            'paid_amount'     => $paidAmount,
+            'remaining_amount' => $remainingAmount,
+            'message'         => 'Thông tin học phí đã được tải.'
+        ]);
+    }
+
+
     //     // Eager load relationships: class -> trinhdo -> dongia
-    //     $class = LopHoc::with('trinhdo.dongia')->find($classId); // <-- Sửa eager load thành 'dongia'
+    //     $class = LopHoc::with('trinhdo.dongia')->find($classId);
     //     $student = HocVien::find($studentId);
 
     //     if (!$class || !$student) {
@@ -184,77 +180,31 @@ class HocPhiController extends Controller
     //     $totalTuition = 0;
     //     // Lấy tổng học phí từ bảng 'dongia' thông qua mối quan hệ 'trinhdo' của 'lophoc'
     //     if ($class->trinhdo && $class->trinhdo->dongia) {
-    //         $totalTuition = $class->trinhdo->dongia->hocphi; // <-- Lấy từ cột 'hocphi' trong bảng 'dongia'
+    //         $totalTuition = $class->trinhdo->dongia->hocphi;
     //     }
-    //     // Nếu bạn dùng `public function dongias()` (số nhiều) trong TrinhDo model,
-    //     // thì bạn cần logic để chọn mức học phí phù hợp (ví dụ: mức mới nhất, mức mặc định)
-    //     // Ví dụ:
-    //     // if ($class->trinhdo && $class->trinhdo->dongias->isNotEmpty()) {
-    //     //     $totalTuition = $class->trinhdo->dongias->first()->hocphi; // Hoặc sắp xếp và lấy cái bạn cần
-    //     // }
-
 
     //     // Tính tổng số tiền đã đóng của học viên này cho lớp học này
+    //     // Chỉ tổng hợp các phiếu thu có trạng thái 'da_thanh_toan'
     //     $paidAmount = PhieuThu::where('hocvien_id', $studentId)
     //         ->where('lophoc_id', $classId)
     //         ->where('trangthai', 'da_thanh_toan')
-    //         ->sum('sotien'); // Đảm bảo cột trong bảng phieuthu là 'sotien'
+    //         ->sum('sotien');
 
     //     $remainingAmount = $totalTuition - $paidAmount;
+
+    //     // Đảm bảo số tiền còn lại không bao giờ âm và làm tròn để tránh sai số dấu phẩy động
+    //     $remainingAmount = max(0, round($remainingAmount, 2));
+    //     $totalTuition = round($totalTuition, 2);
+    //     $paidAmount = round($paidAmount, 2);
+
 
     //     return response()->json([
     //         'total_tuition' => $totalTuition,
     //         'paid_amount' => $paidAmount,
-    //         'remaining_amount' => $remainingAmount > 0 ? $remainingAmount : 0,
+    //         'remaining_amount' => $remainingAmount,
     //         'message' => 'Thông tin học phí đã được tải.'
     //     ]);
     // }
-
-
-    /**
-     * Xử lý việc thu học phí và tạo phiếu thu mới.
-     */
-
-    public function getTuitionInfo($classId, $studentId)
-    {
-        // Eager load relationships: class -> trinhdo -> dongia
-        $class = LopHoc::with('trinhdo.dongia')->find($classId);
-        $student = HocVien::find($studentId);
-
-        if (!$class || !$student) {
-            return response()->json(['message' => 'Lớp học hoặc học viên không tìm thấy.'], 404);
-        }
-
-        $totalTuition = 0;
-        // Lấy tổng học phí từ bảng 'dongia' thông qua mối quan hệ 'trinhdo' của 'lophoc'
-        if ($class->trinhdo && $class->trinhdo->dongia) {
-            $totalTuition = $class->trinhdo->dongia->hocphi;
-        }
-
-        // Tính tổng số tiền đã đóng của học viên này cho lớp học này
-        // Chỉ tổng hợp các phiếu thu có trạng thái 'da_thanh_toan'
-        $paidAmount = PhieuThu::where('hocvien_id', $studentId)
-            ->where('lophoc_id', $classId)
-            ->where('trangthai', 'da_thanh_toan')
-            ->sum('sotien');
-
-        $remainingAmount = $totalTuition - $paidAmount;
-
-        // Đảm bảo số tiền còn lại không bao giờ âm và làm tròn để tránh sai số dấu phẩy động
-        $remainingAmount = max(0, round($remainingAmount, 2));
-        $totalTuition = round($totalTuition, 2);
-        $paidAmount = round($paidAmount, 2);
-
-
-        return response()->json([
-            'total_tuition' => $totalTuition,
-            'paid_amount' => $paidAmount,
-            'remaining_amount' => $remainingAmount,
-            'message' => 'Thông tin học phí đã được tải.'
-        ]);
-    }
-
-
 
 
     // public function processPayment(Request $request)
@@ -377,43 +327,51 @@ class HocPhiController extends Controller
         $paymentDate = $request->input('payment_date');
         $note = $request->input('note');
 
-        $class = LopHoc::with('trinhdo.dongia')->find($classId);
+        // 👉 Load lớp + khóa học + trình độ + năm học
+        $class = LopHoc::with(['khoahoc', 'trinhdo'])->find($classId);
         if (!$class) {
             return response()->json(['message' => 'Lớp học không tìm thấy.'], 404);
         }
 
-        $totalTuition = 0;
-        if ($class->trinhdo && $class->trinhdo->dongia) {
-            $totalTuition = $class->trinhdo->dongia->hocphi;
+        // Lấy trình độ & năm học từ quan hệ đúng
+        $trinhdoId = $class->trinhdo_id;
+        // $namhocId = optional($class->khoahoc)->namhoc_id;
+        $namhocId = $class->namhoc_id;
+
+        if (!$trinhdoId || !$namhocId) {
+            return response()->json(['message' => 'Thiếu trình độ hoặc năm học của lớp.'], 422);
         }
 
-        // Tính số tiền đã đóng HIỆN TẠI trước khi thêm phiếu mới
-        $paidAmountBeforeNewPayment = PhieuThu::where('hocvien_id', $studentId)
+        // Tìm đơn giá CHUẨN cho trình độ + năm học
+        $dongia = DonGia::where('trinhdo_id', $trinhdoId)
+            ->where('namhoc_id', $namhocId)
+            ->first();
+
+        if (!$dongia) {
+            return response()->json(['message' => 'Không tìm thấy đơn giá học phí.'], 404);
+        }
+
+        $totalTuition = round($dongia->hocphi, 2);
+
+        // Tính số tiền đã đóng trước đó
+        $paidAmountBefore = PhieuThu::where('hocvien_id', $studentId)
             ->where('lophoc_id', $classId)
             ->where('trangthai', 'da_thanh_toan')
             ->sum('sotien');
 
-        $remainingAmountBeforeNewPayment = $totalTuition - $paidAmountBeforeNewPayment;
+        $remainingBefore = $totalTuition - $paidAmountBefore;
 
-        // Định nghĩa một ngưỡng sai số nhỏ để tránh lỗi dấu phẩy động
         $epsilon = 0.01;
 
-        // Kiểm tra số tiền đóng có vượt quá số tiền còn lại không
-        if ($amountToPay > $remainingAmountBeforeNewPayment + $epsilon) {
+        if ($amountToPay > $remainingBefore + $epsilon) {
             return response()->json(['message' => 'Số tiền đóng vượt quá số tiền còn lại.'], 400);
         }
 
         DB::beginTransaction();
-
         try {
-            // Xác định trạng thái của phiếu thu mới
-            // Nếu số tiền đóng đủ hoặc vượt quá số tiền còn lại (do làm tròn), thì là 'da_thanh_toan'
-            // Ngược lại, là 'chua_du'
-            $phieuThuStatus = (abs($amountToPay - $remainingAmountBeforeNewPayment) < $epsilon || $amountToPay > $remainingAmountBeforeNewPayment)
-                ? 'da_thanh_toan'
-                : 'chua_du'; // Đã thay đổi từ 'cho_thanh_toan' sang 'chua_du'
+            // Nếu số tiền này đủ thì trạng thái là 'da_thanh_toan', nếu chưa thì 'chua_du'
+            $status = ($amountToPay >= $remainingBefore - $epsilon) ? 'da_thanh_toan' : 'chua_du';
 
-            // Tạo một phiếu thu mới
             $phieuThu = PhieuThu::create([
                 'hocvien_id' => $studentId,
                 'lophoc_id' => $classId,
@@ -421,38 +379,49 @@ class HocPhiController extends Controller
                 'phuongthuc' => $paymentMethod,
                 'ngaythanhtoan' => $paymentDate,
                 'ghichu' => $note,
-                'trangthai' => $phieuThuStatus, // Gán trạng thái đã xác định
-                // Thêm nhanvien_id nếu bạn muốn ghi nhận người thu tiền
-                // 'nhanvien_id' => auth()->id(), // Giả sử bạn có auth user là nhân viên
+                'trangthai' => $status,
+                // 'nhanvien_id' => auth()->id(),
             ]);
 
             DB::commit();
 
-            // === TÍNH TOÁN LẠI HỌC PHÍ SAU KHI CÓ PHIẾU THU MỚI ===
-            // Logic này vẫn chỉ tính các phiếu 'da_thanh_toan' vào tổng số tiền đã đóng
-            $paidAmountAfterNewPayment = PhieuThu::where('hocvien_id', $studentId)
+            // Tính lại sau khi thu
+            $paidAmountAfter = PhieuThu::where('hocvien_id', $studentId)
                 ->where('lophoc_id', $classId)
                 ->where('trangthai', 'da_thanh_toan')
                 ->sum('sotien');
 
-            $remainingAmountAfterNewPayment = $totalTuition - $paidAmountAfterNewPayment;
+            $remainingAfter = $totalTuition - $paidAmountAfter;
 
-            // Xác định trạng thái tổng thể của học viên để gửi về frontend
-            $newTuitionStatus = 'Chưa xác định';
-            $newBadgeClass = 'badge bg-secondary';
+            // Trạng thái tổng thể
+            $newStatus = 'Chưa xác định';
+            $newBadge = 'badge bg-secondary';
 
-            if ($totalTuition <= $epsilon) { // Nếu tổng học phí gần bằng 0
-                $newTuitionStatus = 'Chưa có học phí lớp';
-                $newBadgeClass = 'badge bg-info';
-            } elseif ($remainingAmountAfterNewPayment <= $epsilon) { // Nếu số tiền còn lại rất nhỏ hoặc âm (coi như đã đóng đủ)
-                $newTuitionStatus = 'Đã đóng đủ';
-                $newBadgeClass = 'badge bg-success';
-            } elseif ($paidAmountAfterNewPayment > $epsilon && $remainingAmountAfterNewPayment > $epsilon) { // Đã đóng một phần và vẫn còn nợ đáng kể
-                $newTuitionStatus = 'Còn nợ'; // Sẽ hiển thị số tiền nợ ở frontend
-                $newBadgeClass = 'badge bg-warning text-dark';
-            } else { // paidAmountAfterNewPayment <= $epsilon (chưa đóng gì) và remainingAmountAfterNewPayment > $epsilon (vẫn còn nợ)
-                $newTuitionStatus = 'Chưa đóng';
-                $newBadgeClass = 'badge bg-danger';
+            // if ($totalTuition <= $epsilon) {
+            //     $newStatus = 'Chưa có học phí';
+            //     $newBadge = 'badge bg-info';
+            // } elseif ($remainingAfter <= $epsilon) {
+            //     $newStatus = 'Đã đóng đủ';
+            //     $newBadge = 'badge bg-success';
+            // } elseif ($paidAmountAfter > $epsilon) {
+            //     $newStatus = 'Còn nợ';
+            //     $newBadge = 'badge bg-warning text-dark';
+            // } else {
+            //     $newStatus = 'Chưa đóng';
+            //     $newBadge = 'badge bg-danger';
+            // }
+            if ($totalTuition <= $epsilon) {
+                $newStatus = 'Chưa có học phí';
+                $newBadge = 'badge bg-info';
+            } elseif ($remainingAfter <= $epsilon) {
+                $newStatus = 'Đã đóng đủ';
+                $newBadge = 'badge bg-success';
+            } elseif ($paidAmountAfter > $epsilon) {
+                $newStatus = 'Còn nợ ' . number_format($remainingAfter, 0, ',', '.') . ' VNĐ';
+                $newBadge = 'badge bg-warning text-dark';
+            } else {
+                $newStatus = 'Chưa đóng';
+                $newBadge = 'badge bg-danger';
             }
 
             return response()->json([
@@ -461,17 +430,18 @@ class HocPhiController extends Controller
                 'updated_tuition_info' => [
                     'student_id' => $studentId,
                     'total_tuition' => $totalTuition,
-                    'paid_amount' => $paidAmountAfterNewPayment,
-                    'remaining_amount' => $remainingAmountAfterNewPayment,
-                    'hocphi_status' => $newTuitionStatus,
-                    'hocphi_badge_class' => $newBadgeClass,
+                    'paid_amount' => round($paidAmountAfter, 2),
+                    'remaining_amount' => max(0, round($remainingAfter, 2)),
+                    'hocphi_status' => $newStatus,
+                    'hocphi_badge_class' => $newBadge,
                 ]
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Có lỗi xảy ra khi xử lý thanh toán: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Có lỗi khi xử lý thanh toán: ' . $e->getMessage()], 500);
         }
     }
+
     public function printReceipt($studentId, $classId)
     {
         // Tìm kiếm phiếu thu đã thanh toán gần nhất cho học viên và lớp này
@@ -487,7 +457,7 @@ class HocPhiController extends Controller
         }
 
         // Tải thông tin liên quan
-        $phieuThu->load('hocvien.user', 'lophoc.trinhdo.dongia');
+        $phieuThu->load('hocvien.user', 'lophoc.trinhdo.dongias');
 
         // Logic để tạo biên lai
         // Cách 1: Trả về một view HTML có CSS thân thiện để in
@@ -495,8 +465,9 @@ class HocPhiController extends Controller
 
         // Cách 2: Sử dụng thư viện như DomPDF để tạo PDF (cần cài đặt: composer require barryvdh/laravel-dompdf)
         /*
-        $pdf = Pdf::loadView('admin.phieuthu.print_receipt_pdf', compact('phieuThu'));
-        return $pdf->stream('bien_lai_hoc_phi_' . $phieuThu->id . '.pdf');
+       $pdf = Pdf::loadView('admin.hocphi.printbienlai', compact('phieuThu'));
+return $pdf->download('bienlai_'.$phieuThu->id.'_'.now()->format('Ymd_His').'.pdf');
+
         */
     }
 
@@ -517,65 +488,63 @@ class HocPhiController extends Controller
         $failedAttempts = [];
 
         // 2. Lấy thông tin lớp học, tải Eager Loading chuỗi quan hệ: LopHoc -> TrinhDo -> DonGia
-        $class = LopHoc::with(['trinhDo.donGia'])->find($classId);
+        $class = LopHoc::with(['trinhDo.donGias'])->find($classId);
         if (!$class) {
-            // Nếu không tìm thấy lớp học, chuyển hướng và gửi thông báo lỗi
             return redirect()->back()->with('error', 'Lớp học không tồn tại.');
         }
 
-        // Lấy tổng học phí từ bảng dongia thông qua chuỗi quan hệ
+        // Lấy học phí từ đơn giá
         $totalTuition = 0;
         if ($class->trinhDo && $class->trinhDo->donGia && isset($class->trinhDo->donGia->hocphi)) {
             $totalTuition = $class->trinhDo->donGia->hocphi;
         } else {
-            Log::warning("Lớp học ID: {$classId} không có thông tin trình độ, đơn giá, hoặc thiếu cột 'hocphi' trong bảng dongia. Sử dụng 0 làm học phí.");
-            // Bạn có thể chọn trả về lỗi hoặc cảnh báo người dùng nếu cần
-            // return redirect()->back()->with('warning', 'Không thể xác định học phí cho lớp học này. Vui lòng kiểm tra lại cấu hình.');
+            Log::warning("Lớp học ID: {$classId} không có đơn giá hợp lệ.");
         }
 
-        // 3. Lấy danh sách học viên kèm theo thông tin user
-        $students = HocVien::with('user')->whereIn('id', $studentIds)->get();
+        // 3. Lấy danh sách học viên KHÔNG cần load user
+        $students = HocVien::whereIn('id', $studentIds)->get();
 
         foreach ($students as $student) {
-            $email = optional($student->user)->email;
+            $email = $student->email_hv; // ✅ Dùng trực tiếp từ cột email_hv
 
             // 4. Tính học phí còn nợ
             $paidAmount = $student->phieuthu()->where('lophoc_id', $classId)->sum('sotien');
             $remainingAmount = $totalTuition - $paidAmount;
 
-            // 5. Gửi mail mà KHÔNG KIỂM TRA ĐIỀU KIỆN (chỉ kiểm tra email có tồn tại)
+            // 5. Gửi mail nếu có email
             try {
                 if ($email) {
                     Mail::to($email)->send(new TuitionReminderMail($student, $class, $remainingAmount));
                     $sentCount++;
                 } else {
-                    Log::warning("Bỏ qua gửi email cho học viên {$student->ten} (ID: {$student->id}) vì email bị thiếu hoặc rỗng.");
+                    Log::warning("Không gửi được cho học viên {$student->ten} (ID: {$student->id}) vì thiếu email.");
                     $failedAttempts[] = $student->ten . " (thiếu email)";
                 }
             } catch (\Exception $e) {
-                Log::error("Failed to send email to '{$email}' for student '{$student->ten} (ID: {$student->id})': " . $e->getMessage());
-                $failedAttempts[] = $student->ten . " (lỗi hệ thống: " . $e->getMessage() . ")"; // Thêm chi tiết lỗi vào thông báo
+                Log::error("Lỗi gửi email đến '{$email}' - Học viên '{$student->ten} (ID: {$student->id})': " . $e->getMessage());
+                $failedAttempts[] = $student->ten . " (lỗi: " . $e->getMessage() . ")";
             }
         }
 
-        // 6. Trả về phản hồi bằng cách chuyển hướng và gửi thông báo
+        // 6. Trả kết quả
         if ($sentCount > 0) {
-            $message = "Đã gửi email nhắc nhở học phí thành công cho {$sentCount} học viên.";
+            $message = "Đã gửi email nhắc học phí cho {$sentCount} học viên.";
             if (!empty($failedAttempts)) {
-                $message .= " Gửi thất bại cho: " . implode('; ', array_unique($failedAttempts));
-                return response()->json(['message' => $message, 'type' => 'warning']); // Trả về type warning
+                $message .= " Không gửi được cho: " . implode('; ', array_unique($failedAttempts));
+                return response()->json(['message' => $message, 'type' => 'warning']);
             }
-            return response()->json(['message' => $message, 'type' => 'success']); // Trả về type success
+            return response()->json(['message' => $message, 'type' => 'success']);
         } else {
-            $message = "Không có email nào được gửi.";
+            $message = "Không gửi được email nào.";
             if (!empty($failedAttempts)) {
-                $message .= " Các vấn đề: " . implode('; ', array_unique($failedAttempts));
+                $message .= " Lý do: " . implode('; ', array_unique($failedAttempts));
             } else {
-                $message .= " Vui lòng kiểm tra lại danh sách học viên và email của họ.";
+                $message .= " Vui lòng kiểm tra lại danh sách học viên.";
             }
-            return response()->json(['message' => $message, 'type' => 'error'], 400); // Trả về type error và status 400
+            return response()->json(['message' => $message, 'type' => 'error'], 400);
         }
     }
+
 
     // Ví dụ trong Controller của bạn
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KhoaHoc;
 use App\Models\LopHoc;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ClassController extends Controller
 {
@@ -21,23 +22,53 @@ class ClassController extends Controller
     // }
     public function show($id)
     {
+        // Toàn bộ danh sách KH khác nếu cần hiển thị sidebar
         $courses = KhoaHoc::all();
-        $khoahocss = KhoaHoc::all();
+
+        // Lấy lớp và Eager load đầy đủ quan hệ
         $lopHoc = LopHoc::with([
             'khoaHoc',
-            'trinhDo',
-            // 'cahocs', // Vẫn giữ buoiHocs nếu bạn có phần accordion buổi học
-            'thoiKhoaBieus.giaoVien', // Tải thông tin giáo viên qua thời khóa biểu
-            // 'thoiKhoaBieus.phongHoc' 
-            'thoiKhoaBieus.giaoVien', // Tải thông tin giáo viên qua thời khóa biểu
-            'thoiKhoaBieus.phongHoc' // Tải thông tin phòng học qua thời khóa biểu
+            'trinhDo.dongias', // Lấy đơn giá để khỏi query lại
+            'thoiKhoaBieus.giaoVien',
+            'thoiKhoaBieus.phongHoc'
         ])->findOrFail($id);
 
-        // Lấy danh sách giáo viên và phòng học duy nhất từ các thời khóa biểu
-        // Để hiển thị trong sidebar nếu muốn hiển thị nhiều
+        // Lấy danh sách giáo viên & phòng học duy nhất từ thời khoá biểu
         $giaoViens = $lopHoc->thoiKhoaBieus->pluck('giaoVien')->filter()->unique('id');
         $phongHocs = $lopHoc->thoiKhoaBieus->pluck('phongHoc')->filter()->unique('id');
 
-        return view('pages.class_detail', compact('lopHoc', 'khoahocss', 'giaoViens', 'phongHocs', 'courses'));
+        // Lấy danh sách KH + Trình độ nếu con cần render ở view (sidebar)
+        $khoahocss = DB::table('khoahoc')
+            ->join('lophoc', 'khoahoc.id', '=', 'lophoc.khoahoc_id')
+            ->join('trinhdo', 'lophoc.trinhdo_id', '=', 'trinhdo.id')
+            ->select(
+                'khoahoc.id as khoahoc_id',
+                'khoahoc.ma as khoahoc_ten',
+                'trinhdo.id as trinhdo_id',
+                'trinhdo.ten as trinhdo_ten'
+            )
+            ->distinct()
+            ->get();
+
+        // Xác định học phí: Lấy đơn giá khớp với năm học của lớp (nếu có)
+        $namhocId = $lopHoc->namhoc_id ?? $lopHoc->khoaHoc->namhoc_id ?? null;
+
+        $hocPhi = null;
+        if ($lopHoc->trinhDo && $lopHoc->trinhDo->dongias && $namhocId) {
+            $dongia = $lopHoc->trinhDo->dongias
+                ->where('namhoc_id', $namhocId)
+                ->first();
+            $hocPhi = $dongia ? $dongia->hocphi : null;
+        }
+
+        // Truyền sang view
+        return view('pages.class_detail', compact(
+            'lopHoc',
+            'khoahocss',
+            'giaoViens',
+            'phongHocs',
+            'courses',
+            'hocPhi'
+        ));
     }
 }

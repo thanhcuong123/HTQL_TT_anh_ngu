@@ -2,12 +2,12 @@
         <div class="row mx-0 justify-content-center pt-5">
             <div class="col-lg-6">
                 <div class="section-title text-center position-relative mb-4">
-                    <h6 class="d-inline-block position-relative text-secondary text-uppercase pb-2">Các khóa học của chúng tôi</h6>
-                    <h1 class="display-4">Kiểm tra các khóa học mới phát hành của chúng tôi</h1>
+                    <h6 class="d-inline-block position-relative text-secondary text-uppercase pb-2">Các lớp học của chúng tôi</h6>
+                    <h1 class="display-4">Kiểm tra các lớp học của chúng tôi</h1>
                 </div>
             </div>
         </div>
-        <div class="owl-carousel courses-carousel">
+        <!-- <div class="owl-carousel courses-carousel">
             @forelse($courses as $course)
             <div class="courses-item position-relative">
                 {{-- Đảm bảo đường dẫn ảnh đúng. Nếu ảnh lưu trong storage, cần dùng asset/storage --}}
@@ -18,9 +18,19 @@
                 <img class="img-fluid" src="{{ asset('users/Edukate/img/no-image.jpg') }}" alt="Không có ảnh">
                 @endif
                 <div class="courses-text">
-                    <h4 class="text-center text-white px-3">{{ $course->ten }}</h4>
+                    <h4 class="text-center text-white px-3">
+                        {{ $course->ma ?? '' }}
+                        @php
+                        // Lấy trình độ đầu tiên từ các lớp
+                        $firstTrinhDo = $course->lopHocs->first() ? $course->lopHocs->first()->trinhdo : null;
+                        @endphp
+                        @if($firstTrinhDo)
+                        - {{ $firstTrinhDo->ten }}
+                        @endif
+                    </h4>
+
                     <div class="border-top w-100 mt-3">
-                        <!-- <div class="d-flex justify-content-between p-4">
+                        <div class="d-flex justify-content-between p-4">
                             {{-- Giả sử bạn có mối quan hệ teacher_id trong bảng courses --}}
                             <span class="text-white"><i class="fa fa-user mr-2"></i>
                                 @if($course->teacher)
@@ -30,7 +40,7 @@
                                 @endif
                             </span>
                             <span class="text-white"><i class="fa fa-star mr-2"></i>{{ number_format($course->rating, 1) }} <small>({{ $course->reviews_count }})</small></span>
-                        </div> -->
+                        </div>
                     </div>
                     <div class="w-100 bg-white text-center p-4">
                         <a class="btn btn-primary" href="{{ route('courses_detail', $course->id)  }}">Chi tiết khóa học</a>
@@ -42,7 +52,44 @@
                 <p>Không có khóa học nào để hiển thị.</p>
             </div>
             @endforelse
+        </div> -->
+        <div class="owl-carousel courses-carousel">
+            @forelse($lopHocs as $lop)
+            <div class="courses-item position-relative">
+                {{-- Ảnh: lấy từ khoahoc liên kết với lớp (nếu có), nếu không có dùng placeholder --}}
+                @php
+                $khoahoc = $lop->khoahoc ?? null;
+                $img = $lop
+                ? asset('storage/' . $lop->hinhanh)
+                : asset('users/Edukate/img/no-image.jpg');
+                @endphp
+
+                <img class="img-fluid" src="{{ $img }}" alt="Hình ảnh lớp {{ $lop->tenlophoc ?? $lop->ten ?? 'Lớp' }}">
+
+                <div class="courses-text">
+                    <h4 class="text-center text-white px-3">
+                        {{ $lop->tenlophoc ?? $lop->ten ?? '—' }}
+                        @if(optional($lop->trinhdo)->ten)
+                        <!-- - {{ $lop->trinhdo->ten }} -->
+                        @endif
+                    </h4>
+
+                    <p class="text-center text-white">
+                        <i class="fa fa-users mr-2"></i>{{ $lop->hoc_viens_count ?? 0 }} học viên
+                    </p>
+
+                    <div class="w-100 bg-white text-center p-4">
+                        <a class="btn btn-primary" href="{{ route('class.show', $lop->id) }}">Chi tiết lớp</a>
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="col-12 text-center py-5">
+                <p>Không có lớp học nào để hiển thị.</p>
+            </div>
+            @endforelse
         </div>
+
         <!-- <div class="row justify-content-center bg-image mx-0 mb-5">
             <div class="col-lg-6 py-5">
                 <div class="bg-white p-5 my-5">

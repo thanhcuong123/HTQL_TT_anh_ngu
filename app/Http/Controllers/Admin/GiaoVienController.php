@@ -44,13 +44,19 @@ class GiaoVienController extends Controller
         $chucdanh = ChucDanh::all();
         $hocvi = HocVi::all();
         $chuyenmon = ChuyenMon::all();
-        // Return the view with the paginated list of students
+        $allEmails = GiaoVien::pluck('email_gv')->toArray();
+        $allSdts = GiaoVien::pluck('sdt')->toArray();
+        $allStks = GiaoVien::pluck('stk')->toArray();        // Return the view with the paginated list of students
         return view('admin.giaovien.index', compact(
             'dsgiaovien',
             'newMa',
             'chucdanh',
             'hocvi',
-            'chuyenmon'
+            'chuyenmon',
+            'allEmails',
+            'allSdts',
+            'allStks'
+
         ));
     }
 
@@ -71,19 +77,19 @@ class GiaoVienController extends Controller
         // Tạo mã mới: GV + số có 2 chữ số (01, 02, ...)
         $newMa = 'GV' . str_pad($newNumber, 2, '0', STR_PAD_LEFT);
 
-        // Validate the input data
-        $request->validate([
-            'ten' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'sdt' => 'nullable|string|max:20',
-            'diachi' => 'nullable|string|max:255',
-            'ngaysinh' => 'nullable|date',
-            'gioitinh' => 'nullable|string|in:nam,nữ',
-            'chucdanh_id' => 'nullable|exists:chucdanh,id',
-            'hocvi_id' => 'nullable|exists:hocvi,id',
-            'chuyenmon_id' => 'nullable|exists:chuyenmon,id',
-            'trangthai' => 'nullable|string|max:50',
-        ]);
+        // // Validate the input data
+        // $request->validate([
+        //     'ten' => 'required|string|max:255',
+        //     'email_gv' => 'required|string|email|max:255',
+        //     'sdt' => 'nullable|string|max:20',
+        //     'diachi' => 'nullable|string|max:255',
+        //     'ngaysinh' => 'nullable|date',
+        //     'gioitinh' => 'nullable|string|in:nam,nữ',
+        //     'chucdanh_id' => 'nullable|exists:chucdanh,id',
+        //     'hocvi_id' => 'nullable|exists:hocvi,id',
+        //     'chuyenmon_id' => 'nullable|exists:chuyenmon,id',
+        //     'trangthai' => 'nullable|string|max:50',
+        // ]);
         $imageName = null; // Khởi tạo tên ảnh là null
         if ($request->hasFile('image')) { // Kiểm tra input có tên 'image'
             $imageFile = $request->file('image');
@@ -91,14 +97,14 @@ class GiaoVienController extends Controller
             $imageFile->storeAs('teacher_images', $imageName, 'public'); // Lưu vào storage/app/public/teacher_images
         }
         // Tạo hoặc tìm kiếm người dùng dựa trên email
-        $user = User::firstOrCreate(
-            ['email' => $request->email],
-            [
-                'name' => $request->ten,
-                'password' => Hash::make(Str::random(10)), // Tạo mật khẩu ngẫu nhiên
-                'role' => 'giaovien', // Gán vai trò cho người dùng
-            ]
-        );
+        // $user = User::firstOrCreate(
+        //     ['email' => $request->email],
+        //     [
+        //         'name' => $request->ten,
+        //         'password' => Hash::make(Str::random(10)), // Tạo mật khẩu ngẫu nhiên
+        //         'role' => 'giaovien', // Gán vai trò cho người dùng
+        //     ]
+        // );
 
         // Tạo mới giáo viên và liên kết với người dùng
         $giaovien = new Giaovien();
@@ -112,7 +118,8 @@ class GiaoVienController extends Controller
         $giaovien->hocvi_id = $request->hocvi_id;
         $giaovien->chuyenmon_id = $request->chuyenmon_id;
         $giaovien->trangthai = $request->trangthai ?? 'đang dạy'; // Trạng thái mặc định
-        $giaovien->user_id = $user->id;
+        $giaovien->email_gv = $request->email;
+        // $giaovien->user_id = $user->id;
         $giaovien->hinhanh = $imageName; // Liên kết với user_id
         $giaovien->save();
 
@@ -125,22 +132,22 @@ class GiaoVienController extends Controller
         $giaovien = Giaovien::findOrFail($id);
         // dd($request);
         // Validate dữ liệu đầu vào
-        $request->validate([
-            'ten' => 'required|string|max:255',
-            // Email cần là duy nhất, nhưng ngoại trừ email hiện tại của giáo viên này
-            'email' => 'required|string|email|max:255|unique:users,email,' . $giaovien->user->id,
-            'sdt' => 'nullable|string|max:20',
-            'diachi' => 'nullable|string|max:255',
-            'ngaysinh' => 'nullable|date',
-            'gioitinh' => 'nullable|string|in:nam,nữ',
-            'chucdanh_id' => 'nullable|exists:chucdanh,id',
-            'hocvi_id' => 'nullable|exists:hocvi,id',
-            'chuyenmon_id' => 'nullable|exists:chuyenmon,id',
-            'trangthai' => 'nullable|string|max:50',
-            'stk' => 'nullable|string|max:255', // Thêm validation cho STK
-            // Validation cho hình ảnh: không bắt buộc, nếu có phải là ảnh và có giới hạn
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
+        // $request->validate([
+        //     'ten' => 'required|string|max:255',
+        //     // Email cần là duy nhất, nhưng ngoại trừ email hiện tại của giáo viên này
+        //     'email' => 'required|string|email|max:255|unique:users,email,' . $giaovien->user->id,
+        //     'sdt' => 'nullable|string|max:20',
+        //     'diachi' => 'nullable|string|max:255',
+        //     'ngaysinh' => 'nullable|date',
+        //     'gioitinh' => 'nullable|string|in:nam,nữ',
+        //     'chucdanh_id' => 'nullable|exists:chucdanh,id',
+        //     'hocvi_id' => 'nullable|exists:hocvi,id',
+        //     'chuyenmon_id' => 'nullable|exists:chuyenmon,id',
+        //     'trangthai' => 'nullable|string|max:50',
+        //     'stk' => 'nullable|string|max:255', // Thêm validation cho STK
+        //     // Validation cho hình ảnh: không bắt buộc, nếu có phải là ảnh và có giới hạn
+        //     'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        // ]);
 
         // Cập nhật thông tin giáo viên (sử dụng mảng để dễ dàng hơn)
         $giaovien->ten = $request->ten;
@@ -153,6 +160,7 @@ class GiaoVienController extends Controller
         $giaovien->chuyenmon_id = $request->chuyenmon_id;
         $giaovien->trangthai = $request->trangthai ?? 'đang dạy';
         $giaovien->stk = $request->stk; // Cập nhật STK
+        $giaovien->email_gv = $request->email_gv;
 
         // Xử lý cập nhật hình ảnh
         if ($request->hasFile('image')) {
@@ -181,15 +189,15 @@ class GiaoVienController extends Controller
         $giaovien->save();
 
         // Cập nhật email trong bảng users
-        $user = $giaovien->user;
-        if ($user) {
-            // Validate email cho user update, loại trừ chính user này
-            $request->validate([
-                'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            ]);
-            $user->email = $request->email;
-            $user->save();
-        }
+        // $user = $giaovien->user;
+        // if ($user) {
+        //     // Validate email cho user update, loại trừ chính user này
+        //     $request->validate([
+        //         'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+        //     ]);
+        //     $user->email = $request->email;
+        //     $user->save();
+        // }
 
         // Redirect về trang danh sách giáo viên với thông báo thành công
         // return redirect()->route('giaovien.index')->with('success', 'Cập nhật giáo viên thành công!');
